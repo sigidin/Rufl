@@ -20,9 +20,13 @@ import {
   SortAsc,
   Target,
   Download,
+  Copy,
+  Check,
   Image as ImageIcon,
   Map as MapIcon,
-  Navigation
+  Navigation,
+  ExternalLink,
+  Video
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Papa from 'papaparse';
@@ -37,18 +41,18 @@ const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TD
 // --- Components ---
 
 const Header = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 bg-navy text-white shadow-lg border-b border-white/10">
+  <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20">
     <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col items-center text-center">
-      <div className="text-[9px] uppercase font-bold text-accent/80 tracking-widest mb-0.5">Неофициальное приложение</div>
-      <h1 className="text-lg md:text-xl font-extrabold uppercase tracking-tight">
+      <div className="text-[8px] text-strong text-bright-blue mb-0.5 tracking-[0.3em]">Неофициальное приложение</div>
+      <h1 className="text-2xl text-strong gradient-text">
         РЮФЛ-2026
       </h1>
-      <p className="text-[10px] md:text-xs text-blue-200 font-medium mt-0.5">
-        Региональная Юношеская Футбольная Лига • Дальний Восток
+      <p className="text-[9px] text-navy/60 font-bold uppercase tracking-widest mt-0.5">
+        Региональная Юношеская Футбольная Лига • ДВ
       </p>
-      <div className="flex items-center gap-1.5 mt-1 opacity-60">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-        <span className="text-[9px] uppercase tracking-wider">Обновлено: 22.03 14:30</span>
+      <div className="flex items-center gap-2 mt-1 bg-white/50 px-2 py-0.5 rounded-full border border-white/40">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+        <span className="text-[7px] font-black text-navy/40 uppercase tracking-widest">Обновлено: 22.03 14:30</span>
       </div>
     </div>
   </header>
@@ -73,59 +77,48 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
     return row ? row.lastGames : [];
   };
 
-  const getDayOfWeek = (dateStr: string) => {
-    try {
-      const parts = dateStr.split('.');
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1;
-      const year = parts[2] ? (parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2])) : 2026;
-      const date = new Date(year, month, day);
-      const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-      return days[date.getDay()];
-    } catch (e) {
-      return '';
-    }
-  };
-
   const homeForm = getTeamForm(match.homeTeam);
   const awayForm = getTeamForm(match.awayTeam);
 
   return (
-    <div className="px-4 py-6 bg-white border-b border-slate-200">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-sm">
-            <Calendar className="text-navy w-5 h-5" />
-          </div>
-          <h2 className="text-lg font-black text-navy uppercase tracking-tight">Ближайший матч</h2>
-        </div>
+    <div className="px-4 py-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="max-w-3xl mx-auto"
+      >
+        <SectionTitle title="Ближайший матч" icon={Calendar} />
 
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-navy rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden"
+          whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+          className="glass-card rounded-[32px] p-6 text-navy shadow-2xl relative overflow-hidden border-white/40"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-bright-blue/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full -ml-12 -mb-12 blur-xl" />
-
           <div className="relative z-10">
             <div className="flex flex-col items-center mb-6">
-              <div className="text-accent font-black text-sm uppercase tracking-widest mb-1">
-                {getDayOfWeek(match.date)}
+              <div className="flex justify-center items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-navy/80">{match.date}, {match.time}</span>
+                <span className="text-sm font-medium text-navy/40">{match.location}</span>
               </div>
-              <div className="text-2xl font-black mb-1">{match.date} • {match.time}</div>
-              <div className="flex items-center gap-1.5 text-blue-200/80 text-xs font-bold uppercase tracking-wider">
-                <MapPin className="w-3.5 h-3.5" />
-                {match.location}
-              </div>
+              {match.weather && (
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-navy/40 uppercase tracking-widest">
+                  <span className="w-1 h-1 rounded-full bg-navy/20" />
+                  Погода: {match.weather}
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-3 items-center gap-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-3 border border-white/10 shadow-inner">
-                  <Shield className="text-white w-10 h-10" />
-                </div>
-                <div className="font-black text-xs uppercase leading-tight mb-2 h-8 flex items-center justify-center">
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <div className="flex flex-col items-center flex-1">
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-md border border-slate-100 overflow-hidden"
+                >
+                  <TeamLogo name={match.homeTeam} size="w-10 h-10" />
+                </motion.div>
+                <div className="text-strong text-xs text-center leading-tight mb-2 min-h-[32px] flex items-center">
                   {match.homeTeam}
                 </div>
                 <div className="flex gap-1 justify-center">
@@ -134,14 +127,21 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-4xl font-black text-accent italic">VS</div>
+                <div className="bg-slate-100/80 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/50 min-w-[120px] flex justify-center">
+                  <div className="text-4xl font-black text-navy tracking-tighter whitespace-nowrap">
+                    {match.homeScore !== undefined ? match.homeScore : '0'} - {match.awayScore !== undefined ? match.awayScore : '0'}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-3 border border-white/10 shadow-inner">
-                  <Shield className="text-white w-10 h-10" />
-                </div>
-                <div className="font-black text-xs uppercase leading-tight mb-2 h-8 flex items-center justify-center">
+              <div className="flex flex-col items-center flex-1">
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: -5 }}
+                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-md border border-slate-100 overflow-hidden"
+                >
+                  <TeamLogo name={match.awayTeam} size="w-10 h-10" />
+                </motion.div>
+                <div className="text-strong text-xs text-center leading-tight mb-2 min-h-[32px] flex items-center">
                   {match.awayTeam}
                 </div>
                 <div className="flex gap-1 justify-center">
@@ -149,9 +149,30 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                 </div>
               </div>
             </div>
+
+            <div className="flex justify-center">
+              {match.broadcastUrl ? (
+                <motion.a 
+                  href={match.broadcastUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-bright-blue text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-bright-blue/30"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  Смотреть трансляцию
+                </motion.a>
+              ) : (
+                <div className="flex items-center gap-2 px-6 py-2.5 bg-slate-200 text-navy/40 rounded-full text-[10px] font-black uppercase tracking-widest cursor-not-allowed">
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  Трансляция недоступна
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -192,47 +213,53 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
   const groupedPlayers = getGroupedPlayers();
 
   return (
-    <div className="px-4 py-4 bg-slate-50">
+    <div className="px-4 py-10">
       <div className="max-w-3xl mx-auto">
         <motion.div 
           layout
-          className="bg-white rounded-[32px] shadow-xl border border-slate-200 overflow-hidden"
+          whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+          className="glass-card rounded-[40px] shadow-2xl border border-white/40 overflow-hidden"
         >
           <div 
-            className="p-6 cursor-pointer"
+            className="p-8 cursor-pointer"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <div className="flex flex-col items-center text-center">
               <motion.div 
                 layout
-                className="w-24 h-24 bg-bright-blue rounded-3xl flex items-center justify-center shadow-lg mb-4 border-4 border-light-blue"
+                className="w-28 h-28 gradient-bg rounded-[32px] flex items-center justify-center shadow-2xl mb-6 border-4 border-white/20"
               >
-                <Shield className="text-white w-14 h-14" />
+                <Shield className="text-white w-16 h-16" />
               </motion.div>
               
-              <motion.h2 layout className="text-2xl font-black text-navy uppercase tracking-tight mb-1">
-                ДИНАМО-Владивосток-2012
-              </motion.h2>
+              <div className="flex flex-col items-center mb-4">
+                <motion.h2 layout className="text-4xl text-strong text-navy leading-none">
+                  ДИНАМО
+                </motion.h2>
+                <motion.span layout className="text-sm font-bold text-navy/60 uppercase tracking-[0.3em] mt-2">
+                  Владивосток
+                </motion.span>
+              </div>
               
-              <motion.div layout className="flex items-center gap-2 text-navy/60 font-bold text-sm mb-4">
+              <motion.div layout className="flex items-center gap-2 text-navy/60 font-bold text-sm mb-6">
                 <User className="w-4 h-4 text-bright-blue" />
                 Тренер: Молоков Евгений Валерьевич
               </motion.div>
 
-              <motion.div layout className="flex items-center gap-4">
+              <motion.div layout className="flex items-center gap-6 bg-white/30 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/20">
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest">Место</span>
-                  <span className="text-xl font-black text-bright-blue">{stats.rank}</span>
+                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Место</span>
+                  <span className="text-2xl text-strong text-bright-blue">{stats.rank}</span>
                 </div>
-                <div className="w-px h-8 bg-slate-200" />
+                <div className="w-px h-10 bg-navy/10" />
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest">Очки</span>
-                  <span className="text-xl font-black text-bright-blue">{stats.points}</span>
+                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Очки</span>
+                  <span className="text-2xl text-strong text-bright-blue">{stats.points}</span>
                 </div>
-                <div className="w-px h-8 bg-slate-200" />
+                <div className="w-px h-10 bg-navy/10" />
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest">Форма</span>
-                  <div className="flex gap-1 mt-1">
+                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Последние матчи</span>
+                  <div className="flex gap-1.5 mt-1">
                     {stats.lastResults.map((r, i) => <ResultCircle key={i} result={r} />)}
                   </div>
                 </div>
@@ -240,7 +267,7 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
 
               <motion.div 
                 layout
-                className="mt-6 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-navy/40"
+                className="mt-8 w-12 h-12 rounded-full bg-white/50 flex items-center justify-center text-navy/40 hover:bg-white transition-colors shadow-inner"
               >
                 {isExpanded ? <ChevronUp /> : <ChevronDown />}
               </motion.div>
@@ -253,56 +280,56 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="border-t border-slate-100 bg-slate-50/50"
+                className="border-t border-white/20 bg-white/20"
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-black text-navy uppercase tracking-widest">Состав команды</h3>
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-lg text-strong text-navy">Состав команды</h3>
                     <div className="flex gap-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('name'); }}
-                        className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-all flex items-center gap-1 ${sortBy === 'name' ? 'bg-navy text-white border-navy' : 'bg-white text-navy/60 border-slate-200'}`}
+                        className={`text-[9px] font-bold px-3 py-2 rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap ${sortBy === 'name' ? 'bg-navy text-white border-navy shadow-lg' : 'bg-white/50 text-navy/60 border-white/40'}`}
                       >
                         <SortAsc className="w-3 h-3" /> А-Я
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('goals'); }}
-                        className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-all flex items-center gap-1 ${sortBy === 'goals' ? 'bg-navy text-white border-navy' : 'bg-white text-navy/60 border-slate-200'}`}
+                        className={`text-[9px] font-bold px-4 py-2 rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap ${sortBy === 'goals' ? 'bg-navy text-white border-navy shadow-lg' : 'bg-white/50 text-navy/60 border-white/40'}`}
                       >
                         <Target className="w-3 h-3" /> Голы
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-8">
+                  <div className="space-y-10">
                     {positionGroups.map(group => {
                       const groupPlayers = groupedPlayers[group.key];
                       if (!groupPlayers || groupPlayers.length === 0) return null;
 
                       return (
                         <div key={group.key}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="h-[2px] w-4 bg-bright-blue" />
-                            <h4 className="text-[11px] font-black uppercase text-navy/40 tracking-widest">{group.label}</h4>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="h-[3px] w-6 gradient-bg rounded-full" />
+                            <h4 className="text-xs text-strong text-navy/40">{group.label}</h4>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {groupPlayers.map(player => (
-                              <div key={player.id} className="bg-white rounded-xl p-3 border border-slate-100 flex items-center justify-between shadow-sm">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative w-10 h-10 flex-shrink-0">
+                              <div key={player.id} className="bg-white/60 rounded-2xl p-4 border border-white/40 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-4">
+                                  <div className="relative w-12 h-12 flex-shrink-0">
                                     <img 
                                       src={player.photoUrl} 
                                       alt={player.name} 
-                                      className="w-full h-full object-cover rounded-lg border border-white shadow-sm"
+                                      className="w-full h-full object-cover rounded-xl border-2 border-white shadow-md"
                                       referrerPolicy="no-referrer"
                                     />
-                                    <div className="absolute -top-1 -left-1 w-5 h-5 bg-bright-blue rounded-full flex items-center justify-center text-white font-black text-[9px] border border-white shadow-sm">
+                                    <div className="absolute -top-1.5 -left-1.5 w-6 h-6 gradient-bg rounded-full flex items-center justify-center text-white text-strong text-[10px] border-2 border-white shadow-lg">
                                       {player.number || '—'}
                                     </div>
                                   </div>
                                   <div>
-                                    <div className="text-sm font-bold text-navy">{player.name}</div>
-                                    <div className="text-[10px] font-bold text-navy/40 uppercase">
+                                    <div className="text-sm font-black text-navy">{player.name}</div>
+                                    <div className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">
                                       {player.position === 'врт' ? 'Вратарь' : 
                                        player.position === 'защ' ? 'Защитник' : 
                                        player.position === 'цп' ? 'Полузащитник' : 
@@ -311,8 +338,8 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm font-black text-bright-blue">{player.goals}</div>
-                                  <div className="text-[9px] font-bold text-navy/30 uppercase">
+                                  <div className="text-lg text-strong text-bright-blue">{player.goals}</div>
+                                  <div className="text-[9px] font-bold text-navy/30 uppercase tracking-tighter">
                                     {player.position.includes('врт') ? 'Пропущено' : 'Голы'}
                                   </div>
                                 </div>
@@ -334,24 +361,38 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
 };
 
 const SectionTitle = ({ title, icon: Icon }: { title: string; icon: any }) => (
-  <div className="flex items-center gap-2 mb-4 px-4">
-    <div className="p-2 bg-navy rounded-lg">
-      <Icon className="w-5 h-5 text-accent" />
-    </div>
-    <h3 className="text-xl font-extrabold uppercase text-navy">{title}</h3>
-  </div>
+  <motion.div 
+    initial={{ opacity: 0, x: -20 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true }}
+    className="px-4 mb-6"
+  >
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      className="bg-white/10 backdrop-blur-[20px] rounded-2xl p-3 flex items-center gap-3 border border-white/10 shadow-xl"
+    >
+      <motion.div 
+        whileHover={{ rotate: 15 }}
+        className="p-2 gradient-bg rounded-lg shadow-md"
+      >
+        <Icon className="w-5 h-5 text-white" />
+      </motion.div>
+      <h3 className="text-lg text-strong text-white drop-shadow-sm uppercase tracking-wider">{title}</h3>
+    </motion.div>
+  </motion.div>
 );
 
 const TournamentTable = ({ data }: { data: TableRow[] }) => (
-  <section className="py-8">
-    <SectionTitle title="Турнирная таблица" icon={Trophy} />
-    <div className="px-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-navy/50 uppercase text-[10px] font-bold tracking-wider">
+  <section className="py-10">
+    <div className="max-w-4xl mx-auto">
+      <SectionTitle title="Турнирная таблица" icon={Trophy} />
+      <div className="px-4">
+        <div className="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50/50 text-navy/50 uppercase text-[10px] font-bold tracking-wider">
               <tr>
-                <th className="px-4 py-3 text-center">#</th>
+                <th className="px-2 py-3 text-center w-8">#</th>
                 <th className="px-4 py-3">Команда</th>
                 <th className="px-3 py-3 text-center">И</th>
                 <th className="px-3 py-3 text-center">В</th>
@@ -360,18 +401,22 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
                 <th className="px-3 py-3 text-center">Мячи</th>
                 <th className="px-3 py-3 text-center">+/-</th>
                 <th className="px-4 py-3 text-center">О</th>
-                <th className="px-4 py-3">Форма</th>
+                <th className="px-4 py-3">Последние матчи</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {data.map((row) => {
                 const isDinamo = row.teamName === 'Динамо-Владивосток';
                 return (
-                  <tr 
+                  <motion.tr 
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                     key={row.teamName} 
-                    className={`${isDinamo ? 'bg-light-blue/50 ring-2 ring-inset ring-accent' : 'hover:bg-slate-50 transition-colors'}`}
+                    className={`${isDinamo ? 'bg-bright-blue/10 ring-2 ring-inset ring-accent' : 'transition-colors'}`}
                   >
-                    <td className="px-4 py-4 text-center font-bold text-navy/60">{row.rank}</td>
+                    <td className="px-2 py-4 text-center font-bold text-navy/60">{row.rank}</td>
                     <td className="px-4 py-4 font-bold text-navy whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Shield className={`w-4 h-4 ${isDinamo ? 'text-bright-blue' : 'text-slate-400'}`} />
@@ -390,7 +435,7 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
                         {row.lastGames.map((r, i) => <ResultCircle key={i} result={r} />)}
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 );
               })}
             </tbody>
@@ -398,10 +443,31 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
         </div>
       </div>
     </div>
+    </div>
   </section>
 );
 
+const TEAM_LOGOS: Record<string, string> = {
+  'Динамо-Владивосток': 'https://upload.wikimedia.org/wikipedia/ru/thumb/1/1a/FC_Dynamo_Vladivostok_logo.png/200px-FC_Dynamo_Vladivostok_logo.png',
+  // Добавьте сюда ссылки на логотипы других команд
+};
+
 const TeamLogo = ({ name, size = "w-6 h-6" }: { name: string, size?: string }) => {
+  const logoUrl = TEAM_LOGOS[name];
+
+  if (logoUrl) {
+    return (
+      <div className={`${size} flex items-center justify-center overflow-hidden rounded-md`}>
+        <img 
+          src={logoUrl} 
+          alt={name} 
+          className="w-full h-full object-contain"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
+  }
+
   // Placeholder logic for icons based on team name
   const getIcon = () => {
     if (name.includes('Динамо')) return <Shield className="text-bright-blue" />;
@@ -432,67 +498,18 @@ const getDayOfWeek = (dateStr: string) => {
 };
 
 const FarEastMap = () => {
-  const cities = [
-    { name: 'Владивосток', x: 72, y: 88 },
-    { name: 'Уссурийск', x: 73, y: 83 },
-    { name: 'Хабаровск', x: 78, y: 68 },
-    { name: 'Комсомольск', x: 82, y: 60 },
-    { name: 'Ю.-Сахалинск', x: 92, y: 75 },
-    { name: 'Благовещенск', x: 62, y: 58 },
-  ];
-
   return (
-    <div className="px-4 mb-12">
+    <div className="px-4 py-10">
       <SectionTitle title="География турнира" icon={MapIcon} />
-      <div className="bg-slate-900 rounded-3xl p-4 md:p-8 shadow-2xl border border-white/5 overflow-hidden relative min-h-[400px] flex items-center justify-center">
-        {/* Map Background Image */}
-        <div className="absolute inset-0 opacity-40 pointer-events-none">
+      <div className="glass-card rounded-3xl p-4 md:p-8 shadow-2xl border border-white/10 overflow-hidden relative min-h-[400px] flex items-center justify-center">
+        {/* Placeholder for the Geography Image */}
+        <div className="w-full h-full flex items-center justify-center bg-slate-100/50 rounded-2xl overflow-hidden min-h-[300px]">
           <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Far_Eastern_Federal_District_%28full%29.svg/1200px-Far_Eastern_Federal_District_%28full%29.svg.png" 
-            alt="Карта Дальнего Востока" 
+            src="https://picsum.photos/seed/fareast/1200/800" 
+            alt="География турнира" 
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/40" />
-        </div>
-
-        <div className="relative w-full max-w-[600px] aspect-[4/3]">
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(0,102,255,0.3)]">
-            {cities.map((city, index) => (
-              <motion.g 
-                key={city.name}
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 260,
-                  damping: 20,
-                  delay: index * 0.15 
-                }}
-              >
-                <circle cx={city.x} cy={city.y} r="1.2" fill="#0066FF" className="animate-pulse" />
-                <circle cx={city.x} cy={city.y} r="3" fill="#0066FF" opacity="0.1" />
-                
-                <g transform={`translate(${city.x + 2}, ${city.y - 1})`}>
-                  <rect x="-0.5" y="-2.5" width="22" height="6" rx="1" fill="rgba(15, 23, 42, 0.8)" />
-                  <text 
-                    fontSize="2.5" 
-                    className="font-black fill-white uppercase tracking-tighter"
-                  >
-                    {city.name}
-                  </text>
-                </g>
-              </motion.g>
-            ))}
-          </svg>
-        </div>
-        
-        <div className="absolute top-6 right-6 flex flex-col items-end">
-          <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            <Navigation className="w-3 h-3 text-accent" />
-            <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">География РЮФЛ</span>
-          </div>
         </div>
       </div>
     </div>
@@ -500,92 +517,81 @@ const FarEastMap = () => {
 };
 
 const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const isFinished = !!(match.homeScore !== undefined && match.awayScore !== undefined);
   const dayOfWeek = getDayOfWeek(match.date);
 
   return (
-    <div className="border-b border-slate-50 last:border-0">
-      <div 
-        className={`p-4 flex items-center justify-between transition-colors ${isFinished ? 'cursor-pointer hover:bg-slate-50/50' : ''}`}
-        onClick={() => isFinished && setIsExpanded(!isExpanded)}
-      >
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-slate-100 text-navy/60 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">{dayOfWeek}</span>
+    <div className="border-b border-white/5 last:border-0">
+      <div className="p-4 transition-colors">
+        <div className="mb-3">
+          {/* Line 1: Date */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="bg-white/10 text-navy/60 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">{dayOfWeek}</span>
             <span className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">{match.date}</span>
-            <span className="w-1 h-1 rounded-full bg-slate-200" />
-            <span className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">{match.time}</span>
-            <span className="w-1 h-1 rounded-full bg-slate-200" />
+          </div>
+          
+          {/* Line 2: Location + Icons */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-[10px] font-bold text-bright-blue uppercase tracking-tight">
               <MapPin className="w-2.5 h-2.5" />
               {match.location}
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TeamLogo name={match.homeTeam} />
-                <span className={`text-sm font-bold ${match.homeTeam === 'Динамо-Владивосток' ? 'text-bright-blue underline decoration-2 underline-offset-4' : 'text-navy'}`}>
-                  {match.homeTeam}
-                </span>
-              </div>
-              {isFinished && <span className="text-sm font-black text-navy">{match.homeScore}</span>}
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TeamLogo name={match.awayTeam} />
-                <span className={`text-sm font-bold ${match.awayTeam === 'Динамо-Владивосток' ? 'text-bright-blue underline decoration-2 underline-offset-4' : 'text-navy'}`}>
-                  {match.awayTeam}
-                </span>
-              </div>
-              {isFinished && <span className="text-sm font-black text-navy">{match.awayScore}</span>}
+            
+            <div className="flex items-center gap-3">
+              {/* Video Icon */}
+              {match.broadcastUrl ? (
+                <a 
+                  href={match.broadcastUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-bright-blue hover:scale-110 transition-transform"
+                  title="Трансляция"
+                >
+                  <Video className="w-4 h-4" />
+                </a>
+              ) : (
+                <Video className="w-4 h-4 text-navy/10" />
+              )}
+
+              {/* Photo Icon */}
+              {match.photoUrl ? (
+                <a 
+                  href={match.photoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-bright-blue hover:scale-110 transition-transform"
+                  title="Фото"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </a>
+              ) : (
+                <ImageIcon className="w-4 h-4 text-navy/10" />
+              )}
             </div>
           </div>
         </div>
-
-        <div className="ml-4 flex flex-col items-end gap-2">
-          {match.photoUrl && (
-            <a 
-              href={match.photoUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="p-2 bg-bright-blue/10 rounded-lg text-bright-blue hover:bg-bright-blue/20 transition-colors"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </a>
-          )}
-          {isFinished && (
-            <div className="text-navy/20">
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TeamLogo name={match.homeTeam} />
+              <span className={`text-sm ${match.homeTeam === 'Динамо-Владивосток' ? 'font-black text-navy' : 'font-bold text-navy/70'}`}>
+                {match.homeTeam}
+              </span>
             </div>
-          )}
+            {isFinished && <span className="text-sm font-black text-navy">{match.homeScore}</span>}
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TeamLogo name={match.awayTeam} />
+              <span className={`text-sm ${match.awayTeam === 'Динамо-Владивосток' ? 'font-black text-navy' : 'font-bold text-navy/70'}`}>
+                {match.awayTeam}
+              </span>
+            </div>
+            {isFinished && <span className="text-sm font-black text-navy">{match.awayScore}</span>}
+          </div>
         </div>
       </div>
-
-      <AnimatePresence>
-        {isExpanded && isFinished && (match.homeScorers || match.awayScorers) && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="px-4 pb-4 bg-slate-50/50 overflow-hidden"
-          >
-            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-4">
-              <div className="text-[10px] text-navy/60 leading-relaxed">
-                <div className="font-bold mb-1 uppercase tracking-tighter text-navy/30">Голы {match.homeTeam}</div>
-                {match.homeScorers || '—'}
-              </div>
-              <div className="text-[10px] text-navy/60 leading-relaxed text-right">
-                <div className="font-bold mb-1 uppercase tracking-tighter text-navy/30">Голы {match.awayTeam}</div>
-                {match.awayScorers || '—'}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -593,38 +599,67 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
 const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
   const dayOfWeek = getDayOfWeek(match.date);
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 min-w-[320px] flex-shrink-0">
+    <motion.div 
+      whileHover={{ y: -5, scale: 1.02 }}
+      className="bg-white/80 backdrop-blur-md rounded-[24px] p-5 shadow-xl border border-white/40 min-w-[280px] flex-shrink-0 transition-all"
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="bg-navy text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase">{dayOfWeek}</span>
-          <span className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">{match.date}</span>
+          <span className="gradient-bg text-white text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider">{dayOfWeek}</span>
+          <span className="text-[10px] font-bold text-navy/60 uppercase tracking-widest">{match.date}</span>
         </div>
-        <div className="flex items-center gap-1 text-[10px] font-bold text-bright-blue uppercase tracking-tight">
+        <div className="flex items-center gap-1 text-[9px] font-bold text-bright-blue uppercase tracking-widest">
           <MapPin className="w-3 h-3 text-accent" />
           <span className="truncate max-w-[100px]">{match.location}</span>
         </div>
       </div>
       
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2 flex-1 overflow-hidden">
-          <TeamLogo name={match.homeTeam} size="w-6 h-6" />
-          <span className="text-xs font-bold text-navy truncate">{match.homeTeam}</span>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex flex-col items-center flex-1 overflow-hidden">
+          <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center shadow-sm mb-1.5">
+            <TeamLogo name={match.homeTeam} size="w-5 h-5" />
+          </div>
+          <span className="text-[11px] text-strong text-navy truncate w-full text-center">{match.homeTeam}</span>
         </div>
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] font-black text-navy/20">VS</span>
-          <span className="text-[10px] font-black text-bright-blue">{match.time}</span>
+        <div className="flex flex-col items-center px-1">
+          <span className="text-[9px] font-black text-navy/20 mb-0.5">VS</span>
+          <span className="text-[11px] text-strong text-bright-blue">{match.time}</span>
         </div>
-        <div className="flex items-center gap-2 flex-1 justify-end overflow-hidden">
-          <span className="text-xs font-bold text-navy truncate text-right">{match.awayTeam}</span>
-          <TeamLogo name={match.awayTeam} size="w-6 h-6" />
+        <div className="flex flex-col items-center flex-1 overflow-hidden">
+          <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center shadow-sm mb-1.5">
+            <TeamLogo name={match.awayTeam} size="w-5 h-5" />
+          </div>
+          <span className="text-[11px] text-strong text-navy truncate w-full text-center">{match.awayTeam}</span>
         </div>
       </div>
-    </div>
+
+      <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+        <div className="flex flex-col items-center gap-1">
+          {match.broadcastUrl ? (
+            <a 
+              href={match.broadcastUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] font-black text-bright-blue uppercase tracking-widest hover:underline"
+            >
+              Трансляция
+            </a>
+          ) : (
+            <span className="text-[9px] font-black text-navy/20 uppercase tracking-widest">Трансляция</span>
+          )}
+          {match.weather && (
+            <span className="text-[8px] font-bold text-navy/30 uppercase tracking-widest">
+              {match.weather}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
 const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, icon: any }) => {
-  const isUpcoming = title === "Ближайшие матчи";
+  const isUpcoming = title === "Предстоящие матчи";
   
   // Filter matches for Dinamo Vladivostok if it's the upcoming section
   const filteredMatches = isUpcoming 
@@ -641,22 +676,22 @@ const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, 
     : filteredMatches;
 
   return (
-    <div className="px-4 mb-8">
+    <div className="px-4 py-10">
       <SectionTitle title={title} icon={icon} />
       {isUpcoming ? (
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-4">
+        <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-4">
           {displayMatches.length > 0 ? (
             displayMatches.slice(0, 5).map(match => <UpcomingMatchCard key={match.id} match={match} />)
           ) : (
-            <div className="w-full p-8 text-center text-navy/40 text-sm italic bg-white rounded-2xl border border-slate-100">Матчей не найдено</div>
+            <div className="w-full p-12 text-center text-white/40 text-sm italic glass-card rounded-[32px] border border-white/20">Матчей не найдено</div>
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="glass-card rounded-[32px] shadow-2xl border border-white/20 overflow-hidden">
           {filteredMatches.length > 0 ? (
             filteredMatches.map(match => <MatchRow key={match.id} match={match} />)
           ) : (
-            <div className="p-8 text-center text-navy/40 text-sm italic">Матчей не найдено</div>
+            <div className="p-12 text-center text-white/40 text-sm italic">Матчей не найдено</div>
           )}
         </div>
       )}
@@ -664,8 +699,56 @@ const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, 
   );
 };
 
-const InstallPWA = () => {
+const PastMatchesList = ({ matches }: { matches: Match[] }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const pastMatches = matches
+    .filter(m => m.status === 'Завершен' && (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток'))
+    .sort((a, b) => b.id - a.id);
+
+  if (pastMatches.length === 0) return null;
+
+  return (
+    <section className="py-10">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="glass-card rounded-2xl border border-white/20 overflow-hidden">
+          <div 
+            className="p-4 flex items-center justify-between bg-white/30 cursor-pointer hover:bg-white/40 transition-colors"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 gradient-bg rounded-lg shadow-md">
+                <Clock className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-sm text-strong text-navy uppercase tracking-wider">Прошедшие матчи</h3>
+            </div>
+            <div className="text-navy/40">
+              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                className="divide-y divide-white/10"
+              >
+                {pastMatches.map(match => (
+                  <MatchRow key={match.id} match={match} />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const AppFooter = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -688,42 +771,101 @@ const InstallPWA = () => {
     }
   };
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(label);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+
   return (
-    <div className="px-4 py-8 mt-4 bg-navy text-white text-center">
-      <div className="max-w-md mx-auto">
-        <div className="w-16 h-16 bg-bright-blue rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-bright-blue/20">
-          <Shield className="w-8 h-8 text-white" />
+    <footer className="mt-12 pb-12 px-4 relative z-10">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* PWA & Support Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Install Card */}
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col justify-between"
+          >
+            <div>
+              <h3 className="text-sm text-strong text-navy mb-1">Приложение на главном экране</h3>
+              <p className="text-[10px] font-medium text-navy/40 mb-4 leading-relaxed">
+                Установите РЮФЛ-2026 как приложение для быстрого доступа к результатам
+              </p>
+            </div>
+            <button 
+              onClick={handleInstall}
+              className="w-full bg-bright-blue text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-bright-blue/20"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Установить
+            </button>
+          </motion.div>
+
+          {/* Support Card */}
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="glass-card rounded-[32px] p-6 border border-white/40"
+          >
+            <h3 className="text-sm text-strong text-navy mb-1">Поддержать проект</h3>
+            <p className="text-[10px] font-medium text-navy/40 mb-4 leading-relaxed">
+              Ваша поддержка помогает развивать приложение и обновлять данные
+            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => copyToClipboard('4276500050261351', 'sber')}
+                className="flex-1 h-12 bg-white/50 rounded-2xl border border-white/40 flex items-center justify-center relative group overflow-hidden transition-all active:scale-95"
+                title="Скопировать номер карты Сбер"
+              >
+                <div className="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {copied === 'sber' ? (
+                  <Check className="w-5 h-5 text-green-600 animate-in zoom-in" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+                      <div className="w-3 h-3 bg-white rounded-full opacity-80" />
+                    </div>
+                    <span className="text-[10px] font-black text-navy/60 uppercase tracking-tighter">Сбер</span>
+                  </div>
+                )}
+              </button>
+              <button 
+                onClick={() => copyToClipboard('2200700717929292', 'tbank')}
+                className="flex-1 h-12 bg-white/50 rounded-2xl border border-white/40 flex items-center justify-center relative group overflow-hidden transition-all active:scale-95"
+                title="Скопировать номер карты Т-Банк"
+              >
+                <div className="absolute inset-0 bg-yellow-400/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {copied === 'tbank' ? (
+                  <Check className="w-5 h-5 text-yellow-600 animate-in zoom-in" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
+                      <div className="w-3 h-3 bg-navy rounded-full opacity-80" />
+                    </div>
+                    <span className="text-[10px] font-black text-navy/60 uppercase tracking-tighter">Т-Банк</span>
+                  </div>
+                )}
+              </button>
+            </div>
+          </motion.div>
         </div>
-        <h3 className="text-lg font-bold mb-2">Установите приложение</h3>
-        <p className="text-sm text-white/60 mb-6">Следите за результатами «Динамо» прямо с главного экрана вашего телефона</p>
-        <button 
-          onClick={handleInstall}
-          className="w-full bg-bright-blue hover:bg-bright-blue/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-        >
-          <Download className="w-5 h-5" />
-          Установить на телефон
-        </button>
+
+        {/* Developer & Info */}
+        <div className="text-center pt-4">
+          <a 
+            href="https://t.me/sigidin" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] hover:text-bright-blue transition-colors"
+          >
+            2026 @ Данил Сигидин
+          </a>
+        </div>
       </div>
-    </div>
+    </footer>
   );
 };
-
-const Footer = () => (
-  <footer className="py-12 px-4 text-center bg-slate-100 border-t border-slate-200">
-    <div className="max-w-7xl mx-auto">
-      <div className="w-12 h-12 bg-navy rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-        <Trophy className="text-accent w-6 h-6" />
-      </div>
-      <h4 className="text-navy font-black uppercase tracking-tight mb-1">Молодёжное первенство ДФО</h4>
-      <p className="text-xs text-navy/50 font-medium mb-2">Региональная Юношеская Футбольная Лига 2026</p>
-      <p className="text-[10px] text-accent font-bold uppercase tracking-widest mb-6">Неофициальное приложение</p>
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 text-[10px] font-bold text-navy/60 uppercase tracking-wider">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-        Данные обновлены: 22.03 14:30
-      </div>
-    </div>
-  </footer>
-);
 
 // --- Main App ---
 
@@ -782,7 +924,9 @@ export default function App() {
                 location: row['Место'],
                 homeScorers: row['Авторы_Х'],
                 awayScorers: row['Авторы_Г'],
-                photoUrl: row['Фото']
+                photoUrl: row['Фото'],
+                broadcastUrl: row['Трансляция'],
+                weather: row['Погода']
               };
             });
 
@@ -877,34 +1021,37 @@ export default function App() {
   if (!data) return null;
 
   return (
-    <div className="min-h-screen flex flex-col pt-[84px] md:pt-[92px]">
+    <div className="min-h-screen flex flex-col pt-[130px] md:pt-[140px] relative">
+      <div className="app-background" />
       <Header />
       
-      <NextMatchCard 
-        match={data.nextMatch} 
-        table={data.table}
-      />
-
-      <DinamoSpecialCard 
-        stats={data.dinamoStats} 
-        players={data.dinamoPlayers} 
-      />
-      
-      <main className="flex-1 max-w-7xl mx-auto w-full">
-        <TournamentTable data={data.table} />
-        
-        <MatchList 
-          title="Ближайшие матчи" 
-          icon={Calendar} 
-          matches={data.allMatches} 
+      <div className="relative z-10">
+        <NextMatchCard 
+          match={data.nextMatch} 
+          table={data.table}
         />
 
-        <FarEastMap />
-      </main>
+        <DinamoSpecialCard 
+          stats={data.dinamoStats} 
+          players={data.dinamoPlayers} 
+        />
+        
+        <main className="flex-1 max-w-7xl mx-auto w-full">
+          <TournamentTable data={data.table} />
+          
+          <MatchList 
+            title="Предстоящие матчи" 
+            icon={Calendar} 
+            matches={data.allMatches} 
+          />
 
-      <InstallPWA />
-      
-      <Footer />
+          <PastMatchesList matches={data.allMatches} />
+
+          <FarEastMap />
+        </main>
+
+        <AppFooter />
+      </div>
     </div>
   );
 }

@@ -31,6 +31,8 @@ export interface Match {
   homeScorers?: string; // New: comma separated list
   awayScorers?: string; // New: comma separated list
   photoUrl?: string;    // New: link to gallery
+  broadcastUrl?: string; // New: link to stream
+  weather?: string;      // New: weather info
   isHome?: boolean;
 }
 

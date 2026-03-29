@@ -1,25 +1,63 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=Anton&display=swap');
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
+  --font-accent: "Anton", sans-serif;
   
-  --color-navy: #001F3F;
-  --color-bright-blue: #007BFF;
-  --color-light-blue: #E6F2FF;
-  --color-accent: #FFC300;
+  --color-navy: #050505;
+  --color-bright-blue: #0066FF;
+  --color-light-blue: #F0F7FF;
+  --color-accent: #FFD700;
+  --color-glass: rgba(255, 255, 255, 0.8);
 }
 
 body {
-  background-color: #f8fafc;
-  color: #001F3F;
+  background-color: #050505;
+  color: #050505;
   font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* Background Image with Overlay */
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('https://picsum.photos/seed/vibrant-poster/1920/1080'); /* Replace with your colorful poster URL */
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.9) saturate(1.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+
+.text-strong {
+  font-family: var(--font-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #0066FF, #00D1FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #0066FF 0%, #003399 100%);
 }
 
 /* Custom scrollbar for horizontal tables */
