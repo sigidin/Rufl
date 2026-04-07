@@ -41,19 +41,18 @@ const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TD
 // --- Components ---
 
 const Header = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20">
-    <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col items-center text-center">
-      <div className="text-[8px] text-strong text-bright-blue mb-0.5 tracking-[0.3em]">Неофициальное приложение</div>
-      <h1 className="text-2xl text-strong gradient-text">
-        РЮФЛ-2026
-      </h1>
-      <p className="text-[9px] text-navy/60 font-bold uppercase tracking-widest mt-0.5">
-        Региональная Юношеская Футбольная Лига • ДВ
-      </p>
-      <div className="flex items-center gap-2 mt-1 bg-white/50 px-2 py-0.5 rounded-full border border-white/40">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-        <span className="text-[7px] font-black text-navy/40 uppercase tracking-widest">Обновлено: 22.03 14:30</span>
+  <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl">
+    <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center text-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
+      <div className="flex flex-col items-center">
+        <div className="text-[10px] text-strong text-bright-blue tracking-[0.4em] animate-pulse mb-1">неофициальное приложение</div>
+        <h1 className="text-2xl md:text-3xl text-strong gradient-text glitch-hover cursor-default leading-tight">
+          ДИНАМО на РЮФЛ-26!
+        </h1>
       </div>
+      <p className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] mt-1">
+        Russian Youth Football League | Дальний Восток
+      </p>
     </div>
   </header>
 );
@@ -70,6 +69,8 @@ const ResultCircle = ({ result }: { result: 'W' | 'D' | 'L', key?: React.Key }) 
 };
 
 const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[] }) => {
+  const [copied, setCopied] = useState(false);
+  const [showStream, setShowStream] = useState(false);
   if (!match) return null;
 
   const getTeamForm = (teamName: string) => {
@@ -77,8 +78,25 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
     return row ? row.lastGames : [];
   };
 
+  const copyAddress = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(match.location).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const getVkEmbedUrl = (url: string) => {
+    const match = url.match(/video(-?\d+)_(\d+)/);
+    if (match) {
+      return `https://vk.com/video_ext.php?oid=${match[1]}&id=${match[2]}&hd=2`;
+    }
+    return null;
+  };
+
   const homeForm = getTeamForm(match.homeTeam);
   const awayForm = getTeamForm(match.awayTeam);
+  const vkEmbedUrl = match.broadcastUrl ? getVkEmbedUrl(match.broadcastUrl) : null;
 
   return (
     <div className="px-4 py-10">
@@ -93,43 +111,58 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
-          className="glass-card rounded-[32px] p-6 text-navy shadow-2xl relative overflow-hidden border-white/40"
+          whileHover={{ y: -5 }}
+          className="glass-card rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden border-bright-blue/30 cyber-border"
         >
+          <div className="absolute top-0 right-0 p-4">
+             <div className="text-[10px] font-black text-bright-blue/40 uppercase tracking-[0.2em]">Прямой эфир</div>
+          </div>
+
           <div className="relative z-10">
-            <div className="flex flex-col items-center mb-6">
-              <div className="flex justify-center items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-navy/80">{match.date}, {match.time}</span>
-                <span className="text-sm font-medium text-navy/40">{match.location}</span>
+            <div className="flex flex-col items-center mb-8">
+              <div className="flex flex-col items-center gap-2 mb-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-black text-bright-blue">{match.date}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  <span className="text-lg font-black text-white">{match.time}</span>
+                </div>
+                <button 
+                  onClick={copyAddress}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group"
+                >
+                  <Navigation className={`w-3.5 h-3.5 ${copied ? 'text-green-400' : 'text-bright-blue group-hover:animate-bounce'}`} />
+                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">{match.location}</span>
+                  {copied && <Check className="w-3 h-3 text-green-400" />}
+                </button>
               </div>
               {match.weather && (
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-navy/40 uppercase tracking-widest">
-                  <span className="w-1 h-1 rounded-full bg-navy/20" />
+                <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-pulse" />
                   Погода: {match.weather}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center justify-between gap-4 mb-10">
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-md border border-slate-100 overflow-hidden"
+                  className="w-20 h-20 bg-navy/80 rounded-2xl flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow"
                 >
-                  <TeamLogo name={match.homeTeam} size="w-10 h-10" />
+                  <TeamLogo name={match.homeTeam} size="w-14 h-14" />
                 </motion.div>
-                <div className="text-strong text-xs text-center leading-tight mb-2 min-h-[32px] flex items-center">
+                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center">
                   {match.homeTeam}
                 </div>
-                <div className="flex gap-1 justify-center">
+                <div className="flex gap-1.5 justify-center">
                   {homeForm.map((r, i) => <ResultCircle key={i} result={r} />)}
                 </div>
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="bg-slate-100/80 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/50 min-w-[120px] flex justify-center">
-                  <div className="text-4xl font-black text-navy tracking-tighter whitespace-nowrap">
-                    {match.homeScore !== undefined ? match.homeScore : '0'} - {match.awayScore !== undefined ? match.awayScore : '0'}
+                <div className="bg-bright-blue/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-bright-blue/30 min-w-[140px] flex justify-center shadow-[0_0_20px_rgba(0,240,255,0.1)]">
+                  <div className="text-5xl font-black text-white tracking-tighter italic">
+                    VS
                   </div>
                 </div>
               </div>
@@ -137,38 +170,75 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: -5 }}
-                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-md border border-slate-100 overflow-hidden"
+                  className="w-20 h-20 bg-navy/80 rounded-2xl flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow"
                 >
-                  <TeamLogo name={match.awayTeam} size="w-10 h-10" />
+                  <TeamLogo name={match.awayTeam} size="w-14 h-14" />
                 </motion.div>
-                <div className="text-strong text-xs text-center leading-tight mb-2 min-h-[32px] flex items-center">
+                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center">
                   {match.awayTeam}
                 </div>
-                <div className="flex gap-1 justify-center">
+                <div className="flex gap-1.5 justify-center">
                   {awayForm.map((r, i) => <ResultCircle key={i} result={r} />)}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-center">
-              {match.broadcastUrl ? (
-                <motion.a 
-                  href={match.broadcastUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-bright-blue text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-bright-blue/30"
-                >
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  Смотреть трансляцию
-                </motion.a>
-              ) : (
-                <div className="flex items-center gap-2 px-6 py-2.5 bg-slate-200 text-navy/40 rounded-full text-[10px] font-black uppercase tracking-widest cursor-not-allowed">
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  Трансляция недоступна
-                </div>
-              )}
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex justify-center">
+                {match.broadcastUrl ? (
+                  <motion.button 
+                    onClick={() => setShowStream(!showStream)}
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0, 240, 255, 0.5)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center gap-3 px-8 py-3.5 ${showStream ? 'bg-white text-navy' : 'bg-bright-blue text-navy'} font-black uppercase tracking-[0.2em] rounded-xl text-xs shadow-lg shadow-bright-blue/30 transition-all`}
+                  >
+                    <Video className="w-4 h-4" />
+                    {showStream ? 'Закрыть трансляцию' : 'Смотреть трансляцию'}
+                  </motion.button>
+                ) : (
+                  <div className="flex items-center gap-3 px-8 py-3.5 bg-white/5 text-white/20 rounded-xl text-xs font-black uppercase tracking-[0.2em] border border-white/10 cursor-not-allowed">
+                    <Video className="w-4 h-4" />
+                    Трансляция недоступна
+                  </div>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {showStream && match.broadcastUrl && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="w-full overflow-hidden"
+                  >
+                    <div className="relative pt-[56.25%] w-full bg-navy/50 rounded-2xl border border-bright-blue/20 overflow-hidden shadow-2xl">
+                      {vkEmbedUrl ? (
+                        <iframe 
+                          src={vkEmbedUrl} 
+                          className="absolute top-0 left-0 w-full h-full"
+                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" 
+                          frameBorder="0" 
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                          <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">
+                            Прямой плеер не поддерживается для этой ссылки
+                          </p>
+                          <a 
+                            href={match.broadcastUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-bright-blue text-[10px] font-black uppercase underline tracking-widest"
+                          >
+                            Открыть в новом окне
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </motion.div>
@@ -217,49 +287,63 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
       <div className="max-w-3xl mx-auto">
         <motion.div 
           layout
-          whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
-          className="glass-card rounded-[40px] shadow-2xl border border-white/40 overflow-hidden"
+          whileHover={{ y: -5 }}
+          className="glass-card rounded-[40px] shadow-2xl border border-bright-blue/30 overflow-hidden cyber-border"
         >
           <div 
-            className="p-8 cursor-pointer"
+            className="p-8 cursor-pointer relative"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            <div className="flex flex-col items-center text-center">
+            <div className="absolute top-0 right-0 p-6">
+               <img 
+                 src="https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png" 
+                 alt="" 
+                 className="w-32 h-32 opacity-10 rotate-12 object-contain"
+                 referrerPolicy="no-referrer"
+               />
+            </div>
+
+            <div className="flex flex-col items-center text-center relative z-10">
               <motion.div 
                 layout
-                className="w-28 h-28 gradient-bg rounded-[32px] flex items-center justify-center shadow-2xl mb-6 border-4 border-white/20"
+                className="w-28 h-28 gradient-bg rounded-[32px] flex items-center justify-center shadow-2xl mb-6 border-4 border-bright-blue/20 neon-glow p-4"
               >
-                <Shield className="text-white w-16 h-16" />
+                <img 
+                  src="https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png" 
+                  alt="Динамо" 
+                  className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                  referrerPolicy="no-referrer"
+                />
               </motion.div>
               
-              <div className="flex flex-col items-center mb-4">
-                <motion.h2 layout className="text-4xl text-strong text-navy leading-none">
+              <div className="flex flex-col items-center mb-6">
+                <motion.h2 layout className="text-5xl text-strong text-white leading-none italic tracking-tighter">
                   ДИНАМО
                 </motion.h2>
-                <motion.span layout className="text-sm font-bold text-navy/60 uppercase tracking-[0.3em] mt-2">
+                <motion.span layout className="text-sm font-black text-bright-blue uppercase tracking-[0.4em] mt-3">
                   Владивосток
                 </motion.span>
               </div>
               
-              <motion.div layout className="flex items-center gap-2 text-navy/60 font-bold text-sm mb-6">
+              <motion.div layout className="flex items-center gap-3 text-white/60 font-bold text-xs mb-8 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
                 <User className="w-4 h-4 text-bright-blue" />
-                Тренер: Молоков Евгений Валерьевич
+                <span>Главный тренер: Молоков Евгений Валерьевич</span>
               </motion.div>
 
-              <motion.div layout className="flex items-center gap-6 bg-white/30 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/20">
+              <motion.div layout className="flex items-center gap-8 bg-navy/80 backdrop-blur-xl px-10 py-6 rounded-3xl border border-bright-blue/30 shadow-2xl">
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Место</span>
-                  <span className="text-2xl text-strong text-bright-blue">{stats.rank}</span>
+                  <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Место</span>
+                  <span className="text-3xl text-strong text-bright-blue italic">{stats.rank}</span>
                 </div>
-                <div className="w-px h-10 bg-navy/10" />
+                <div className="w-px h-12 bg-white/10" />
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Очки</span>
-                  <span className="text-2xl text-strong text-bright-blue">{stats.points}</span>
+                  <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Очки</span>
+                  <span className="text-3xl text-strong text-bright-blue italic">{stats.points}</span>
                 </div>
-                <div className="w-px h-10 bg-navy/10" />
+                <div className="w-px h-12 bg-white/10" />
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-navy/40 uppercase tracking-widest mb-1">Последние матчи</span>
-                  <div className="flex gap-1.5 mt-1">
+                  <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Форма</span>
+                  <div className="flex gap-2 mt-1">
                     {stats.lastResults.map((r, i) => <ResultCircle key={i} result={r} />)}
                   </div>
                 </div>
@@ -267,7 +351,7 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
 
               <motion.div 
                 layout
-                className="mt-8 w-12 h-12 rounded-full bg-white/50 flex items-center justify-center text-navy/40 hover:bg-white transition-colors shadow-inner"
+                className="mt-10 w-12 h-12 rounded-full bg-bright-blue/10 flex items-center justify-center text-bright-blue hover:bg-bright-blue hover:text-navy transition-all shadow-lg border border-bright-blue/20"
               >
                 {isExpanded ? <ChevronUp /> : <ChevronDown />}
               </motion.div>
@@ -280,67 +364,83 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="border-t border-white/20 bg-white/20"
+                className="border-t border-bright-blue/20 bg-navy/40"
               >
                 <div className="p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-lg text-strong text-navy">Состав команды</h3>
-                    <div className="flex gap-2">
+                  <div className="flex items-center justify-between mb-10">
+                    <h3 className="text-xl text-strong text-white italic">Состав команды</h3>
+                    <div className="flex gap-3">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('name'); }}
-                        className={`text-[9px] font-bold px-3 py-2 rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap ${sortBy === 'name' ? 'bg-navy text-white border-navy shadow-lg' : 'bg-white/50 text-navy/60 border-white/40'}`}
+                        className={`text-[10px] font-black px-4 py-2.5 rounded-xl border transition-all flex items-center gap-2 uppercase tracking-widest ${sortBy === 'name' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
                       >
-                        <SortAsc className="w-3 h-3" /> А-Я
+                        <SortAsc className="w-3.5 h-3.5" /> А-Я
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('goals'); }}
-                        className={`text-[9px] font-bold px-4 py-2 rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap ${sortBy === 'goals' ? 'bg-navy text-white border-navy shadow-lg' : 'bg-white/50 text-navy/60 border-white/40'}`}
+                        className={`text-[10px] font-black px-4 py-2.5 rounded-xl border transition-all flex items-center gap-2 uppercase tracking-widest ${sortBy === 'goals' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
                       >
-                        <Target className="w-3 h-3" /> Голы
+                        <Target className="w-3.5 h-3.5" /> Голы
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-10">
+                  <div className="space-y-12">
                     {positionGroups.map(group => {
                       const groupPlayers = groupedPlayers[group.key];
                       if (!groupPlayers || groupPlayers.length === 0) return null;
 
                       return (
                         <div key={group.key}>
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="h-[3px] w-6 gradient-bg rounded-full" />
-                            <h4 className="text-xs text-strong text-navy/40">{group.label}</h4>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="h-[2px] w-8 gradient-bg rounded-full" />
+                            <h4 className="text-[11px] font-black text-bright-blue uppercase tracking-[0.3em]">{group.label}</h4>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {groupPlayers.map(player => (
-                              <div key={player.id} className="bg-white/60 rounded-2xl p-4 border border-white/40 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-4">
-                                  <div className="relative w-12 h-12 flex-shrink-0">
+                              <div key={player.id} className="relative bg-navy/80 rounded-3xl overflow-hidden border border-white/10 shadow-2xl hover:border-bright-blue/50 transition-all group h-32 flex">
+                                {/* Background Image for the card */}
+                                <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                                  <img 
+                                    src="https://files.catbox.moe/b25sk5.png" 
+                                    alt="" 
+                                    className="w-full h-full object-cover object-top"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/80 to-transparent" />
+                                </div>
+
+                                <div className="relative z-10 flex items-center p-4 w-full">
+                                  <div className="relative w-24 h-24 flex-shrink-0 mr-4">
+                                    <div className="absolute inset-0 bg-bright-blue/20 rounded-2xl blur-md group-hover:bg-bright-blue/40 transition-all" />
                                     <img 
                                       src={player.photoUrl} 
                                       alt={player.name} 
-                                      className="w-full h-full object-cover rounded-xl border-2 border-white shadow-md"
+                                      className="w-full h-full object-cover rounded-2xl border border-white/20 shadow-2xl relative z-10"
                                       referrerPolicy="no-referrer"
                                     />
-                                    <div className="absolute -top-1.5 -left-1.5 w-6 h-6 gradient-bg rounded-full flex items-center justify-center text-white text-strong text-[10px] border-2 border-white shadow-lg">
+                                    <div className="absolute -top-2 -left-2 w-8 h-8 gradient-bg rounded-lg flex items-center justify-center text-white text-strong text-xs border border-white/20 shadow-xl italic z-20">
                                       {player.number || '—'}
                                     </div>
                                   </div>
-                                  <div>
-                                    <div className="text-sm font-black text-navy">{player.name}</div>
-                                    <div className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">
+                                  
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-lg font-black text-white group-hover:text-bright-blue transition-colors truncate leading-tight">{player.name}</div>
+                                    <div className="text-[10px] font-bold text-bright-blue/60 uppercase tracking-[0.2em] mt-1">
                                       {player.position === 'врт' ? 'Вратарь' : 
                                        player.position === 'защ' ? 'Защитник' : 
                                        player.position === 'цп' ? 'Полузащитник' : 
                                        player.position === 'нап' ? 'Нападающий' : player.position}
                                     </div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-lg text-strong text-bright-blue">{player.goals}</div>
-                                  <div className="text-[9px] font-bold text-navy/30 uppercase tracking-tighter">
-                                    {player.position.includes('врт') ? 'Пропущено' : 'Голы'}
+                                    
+                                    <div className="mt-3 flex items-center gap-4">
+                                      <div className="flex flex-col">
+                                        <span className="text-xl text-strong text-white italic leading-none">{player.goals}</span>
+                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-tighter">
+                                          {player.position.includes('врт') ? 'Пропущено' : 'Голы'}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -362,22 +462,23 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
 
 const SectionTitle = ({ title, icon: Icon }: { title: string; icon: any }) => (
   <motion.div 
-    initial={{ opacity: 0, x: -20 }}
-    whileInView={{ opacity: 1, x: 0 }}
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
-    className="px-4 mb-6"
+    className="px-4 mb-8 flex justify-center"
   >
     <motion.div 
-      whileHover={{ scale: 1.02 }}
-      className="bg-white/10 backdrop-blur-[20px] rounded-2xl p-3 flex items-center gap-3 border border-white/10 shadow-xl"
+      whileHover={{ scale: 1.05 }}
+      className="bg-navy/60 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-4 border border-bright-blue/30 shadow-[0_0_20px_rgba(0,240,255,0.15)] cyber-border"
     >
       <motion.div 
-        whileHover={{ rotate: 15 }}
-        className="p-2 gradient-bg rounded-lg shadow-md"
+        whileHover={{ rotate: 180 }}
+        transition={{ duration: 0.5 }}
+        className="p-2.5 gradient-bg rounded-xl shadow-lg"
       >
-        <Icon className="w-5 h-5 text-white" />
+        <Icon className="w-6 h-6 text-white" />
       </motion.div>
-      <h3 className="text-lg text-strong text-white drop-shadow-sm uppercase tracking-wider">{title}</h3>
+      <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest italic">{title}</h3>
     </motion.div>
   </motion.div>
 );
@@ -387,24 +488,24 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
     <div className="max-w-4xl mx-auto">
       <SectionTitle title="Турнирная таблица" icon={Trophy} />
       <div className="px-4">
-        <div className="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="glass-card rounded-2xl shadow-2xl border border-bright-blue/20 overflow-hidden cyber-border">
           <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50/50 text-navy/50 uppercase text-[10px] font-bold tracking-wider">
+            <thead className="bg-navy/80 text-bright-blue uppercase text-[10px] font-black tracking-widest border-b border-bright-blue/20">
               <tr>
-                <th className="px-2 py-3 text-center w-8">#</th>
-                <th className="px-4 py-3">Команда</th>
-                <th className="px-3 py-3 text-center">И</th>
-                <th className="px-3 py-3 text-center">В</th>
-                <th className="px-3 py-3 text-center">Н</th>
-                <th className="px-3 py-3 text-center">П</th>
-                <th className="px-3 py-3 text-center">Мячи</th>
-                <th className="px-3 py-3 text-center">+/-</th>
-                <th className="px-4 py-3 text-center">О</th>
-                <th className="px-4 py-3">Последние матчи</th>
+                <th className="px-3 py-4 text-center w-12">#</th>
+                <th className="px-4 py-4">Команда</th>
+                <th className="px-3 py-4 text-center">И</th>
+                <th className="px-3 py-4 text-center">В</th>
+                <th className="px-3 py-4 text-center">Н</th>
+                <th className="px-3 py-4 text-center">П</th>
+                <th className="px-3 py-4 text-center">Мячи</th>
+                <th className="px-3 py-4 text-center">+/-</th>
+                <th className="px-4 py-4 text-center">О</th>
+                <th className="px-4 py-4">Форма</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-bright-blue/10">
               {data.map((row) => {
                 const isDinamo = row.teamName === 'Динамо-Владивосток';
                 return (
@@ -412,26 +513,36 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                    whileHover={{ backgroundColor: "rgba(0, 240, 255, 0.05)" }}
                     key={row.teamName} 
-                    className={`${isDinamo ? 'bg-bright-blue/10 ring-2 ring-inset ring-accent' : 'transition-colors'}`}
+                    className={`${isDinamo ? 'bg-bright-blue/10' : ''} transition-colors`}
                   >
-                    <td className="px-2 py-4 text-center font-bold text-navy/60">{row.rank}</td>
-                    <td className="px-4 py-4 font-bold text-navy whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Shield className={`w-4 h-4 ${isDinamo ? 'text-bright-blue' : 'text-slate-400'}`} />
-                        {row.teamName}
+                    <td className="px-3 py-5 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className={`font-black ${isDinamo ? 'text-bright-blue text-lg' : 'text-white/80'}`}>{row.rank}</span>
+                        {row.rankChange !== undefined && row.rankChange !== 0 && (
+                          <div className={`flex items-center text-[8px] font-bold ${row.rankChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {row.rankChange > 0 ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                            {Math.abs(row.rankChange)}
+                          </div>
+                        )}
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-center font-medium">{row.played}</td>
-                    <td className="px-3 py-4 text-center text-green-600 font-bold">{row.won}</td>
-                    <td className="px-3 py-4 text-center text-yellow-600 font-bold">{row.drawn}</td>
-                    <td className="px-3 py-4 text-center text-red-500 font-bold">{row.lost}</td>
-                    <td className="px-3 py-4 text-center text-navy/60">{row.goalsFor}-{row.goalsAgainst}</td>
-                    <td className="px-3 py-4 text-center font-medium">{row.goalsFor - row.goalsAgainst}</td>
-                    <td className="px-4 py-4 text-center font-black text-navy text-base">{row.points}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-1">
+                    <td className="px-4 py-5 font-bold text-white whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <TeamLogo name={row.teamName} size="w-6 h-6" />
+                        <span className={isDinamo ? 'text-bright-blue' : ''}>{row.teamName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 text-center font-medium text-white/70">{row.played}</td>
+                    <td className="px-3 py-5 text-center text-green-400 font-bold">{row.won}</td>
+                    <td className="px-3 py-5 text-center text-neon-yellow font-bold">{row.drawn}</td>
+                    <td className="px-3 py-5 text-center text-red-400 font-bold">{row.lost}</td>
+                    <td className="px-3 py-5 text-center text-white/50">{row.goalsFor}-{row.goalsAgainst}</td>
+                    <td className="px-3 py-5 text-center font-medium text-white/70">{row.goalsFor - row.goalsAgainst}</td>
+                    <td className="px-4 py-5 text-center font-black text-bright-blue text-lg">{row.points}</td>
+                    <td className="px-4 py-5">
+                      <div className="flex gap-1.5">
                         {row.lastGames.map((r, i) => <ResultCircle key={i} result={r} />)}
                       </div>
                     </td>
@@ -448,7 +559,8 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
 );
 
 const TEAM_LOGOS: Record<string, string> = {
-  'Динамо-Владивосток': 'https://upload.wikimedia.org/wikipedia/ru/thumb/1/1a/FC_Dynamo_Vladivostok_logo.png/200px-FC_Dynamo_Vladivostok_logo.png',
+  'Динамо-Владивосток': 'https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png',
+  'Академия Динамо': 'https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png',
   // Добавьте сюда ссылки на логотипы других команд
 };
 
@@ -505,7 +617,7 @@ const FarEastMap = () => {
         {/* Placeholder for the Geography Image */}
         <div className="w-full h-full flex items-center justify-center bg-slate-100/50 rounded-2xl overflow-hidden min-h-[300px]">
           <img 
-            src="https://picsum.photos/seed/fareast/1200/800" 
+            src="https://files.catbox.moe/ya1luu.png" 
             alt="География турнира" 
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -522,35 +634,35 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
 
   return (
     <div className="border-b border-white/5 last:border-0">
-      <div className="p-4 transition-colors">
-        <div className="mb-3">
+      <div className="p-5 transition-colors hover:bg-white/5">
+        <div className="mb-4">
           {/* Line 1: Date */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="bg-white/10 text-navy/60 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">{dayOfWeek}</span>
-            <span className="text-[10px] font-bold text-navy/40 uppercase tracking-wider">{match.date}</span>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="bg-bright-blue/10 text-bright-blue text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">{dayOfWeek}</span>
+            <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">{match.date}</span>
           </div>
           
           {/* Line 2: Location + Icons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-[10px] font-bold text-bright-blue uppercase tracking-tight">
-              <MapPin className="w-2.5 h-2.5" />
+            <div className="flex items-center gap-2 text-[11px] font-black text-bright-blue uppercase tracking-widest italic">
+              <MapPin className="w-3 h-3" />
               {match.location}
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Video Icon */}
               {match.broadcastUrl ? (
                 <a 
                   href={match.broadcastUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-bright-blue hover:scale-110 transition-transform"
+                  className="text-bright-blue hover:scale-125 transition-transform neon-glow p-1 rounded-md"
                   title="Трансляция"
                 >
-                  <Video className="w-4 h-4" />
+                  <Video className="w-4.5 h-4.5" />
                 </a>
               ) : (
-                <Video className="w-4 h-4 text-navy/10" />
+                <Video className="w-4.5 h-4.5 text-white/10" />
               )}
 
               {/* Photo Icon */}
@@ -559,36 +671,36 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
                   href={match.photoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-bright-blue hover:scale-110 transition-transform"
+                  className="text-bright-blue hover:scale-125 transition-transform neon-glow p-1 rounded-md"
                   title="Фото"
                 >
-                  <ImageIcon className="w-4 h-4" />
+                  <ImageIcon className="w-4.5 h-4.5" />
                 </a>
               ) : (
-                <ImageIcon className="w-4 h-4 text-navy/10" />
+                <ImageIcon className="w-4.5 h-4.5 text-white/10" />
               )}
             </div>
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TeamLogo name={match.homeTeam} />
-              <span className={`text-sm ${match.homeTeam === 'Динамо-Владивосток' ? 'font-black text-navy' : 'font-bold text-navy/70'}`}>
+            <div className="flex items-center gap-3">
+              <TeamLogo name={match.homeTeam} size="w-7 h-7" />
+              <span className={`text-base ${match.homeTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.homeTeam}
               </span>
             </div>
-            {isFinished && <span className="text-sm font-black text-navy">{match.homeScore}</span>}
+            {isFinished && <span className="text-xl font-black text-white italic">{match.homeScore}</span>}
           </div>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TeamLogo name={match.awayTeam} />
-              <span className={`text-sm ${match.awayTeam === 'Динамо-Владивосток' ? 'font-black text-navy' : 'font-bold text-navy/70'}`}>
+            <div className="flex items-center gap-3">
+              <TeamLogo name={match.awayTeam} size="w-7 h-7" />
+              <span className={`text-base ${match.awayTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.awayTeam}
               </span>
             </div>
-            {isFinished && <span className="text-sm font-black text-navy">{match.awayScore}</span>}
+            {isFinished && <span className="text-xl font-black text-white italic">{match.awayScore}</span>}
           </div>
         </div>
       </div>
@@ -597,58 +709,78 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
 };
 
 const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
+  const [copied, setCopied] = useState(false);
   const dayOfWeek = getDayOfWeek(match.date);
+
+  const copyAddress = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(match.location).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -5, scale: 1.02 }}
-      className="bg-white/80 backdrop-blur-md rounded-[24px] p-5 shadow-xl border border-white/40 min-w-[280px] flex-shrink-0 transition-all"
+      className="bg-navy/60 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border border-bright-blue/20 min-w-[300px] flex-shrink-0 transition-all cyber-border"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <span className="gradient-bg text-white text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider">{dayOfWeek}</span>
-          <span className="text-[10px] font-bold text-navy/60 uppercase tracking-widest">{match.date}</span>
+          <span className="gradient-bg text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">{dayOfWeek}</span>
+          <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">{match.date}</span>
         </div>
-        <div className="flex items-center gap-1 text-[9px] font-bold text-bright-blue uppercase tracking-widest">
-          <MapPin className="w-3 h-3 text-accent" />
-          <span className="truncate max-w-[100px]">{match.location}</span>
-        </div>
+        <button 
+          onClick={copyAddress}
+          className="flex items-center gap-1.5 text-[9px] font-bold text-bright-blue uppercase tracking-widest hover:text-white transition-colors group"
+        >
+          <Navigation className={`w-3 h-3 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
+          <span className={`truncate max-w-[100px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано!' : match.location}</span>
+        </button>
       </div>
       
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center shadow-sm mb-1.5">
-            <TeamLogo name={match.homeTeam} size="w-5 h-5" />
+          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow">
+            <TeamLogo name={match.homeTeam} size="w-8 h-8" />
           </div>
-          <span className="text-[11px] text-strong text-navy truncate w-full text-center">{match.homeTeam}</span>
+          <span className="text-[12px] text-strong text-white truncate w-full text-center">{match.homeTeam}</span>
         </div>
-        <div className="flex flex-col items-center px-1">
-          <span className="text-[9px] font-black text-navy/20 mb-0.5">VS</span>
-          <span className="text-[11px] text-strong text-bright-blue">{match.time}</span>
+        <div className="flex flex-col items-center px-2">
+          <span className="text-[10px] font-black text-white/10 mb-1">VS</span>
+          <span className="text-lg font-black text-bright-blue italic">{match.time}</span>
         </div>
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center shadow-sm mb-1.5">
-            <TeamLogo name={match.awayTeam} size="w-5 h-5" />
+          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow">
+            <TeamLogo name={match.awayTeam} size="w-8 h-8" />
           </div>
-          <span className="text-[11px] text-strong text-navy truncate w-full text-center">{match.awayTeam}</span>
+          <span className="text-[12px] text-strong text-white truncate w-full text-center">{match.awayTeam}</span>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
-        <div className="flex flex-col items-center gap-1">
-          {match.broadcastUrl ? (
-            <a 
-              href={match.broadcastUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[9px] font-black text-bright-blue uppercase tracking-widest hover:underline"
-            >
-              Трансляция
-            </a>
-          ) : (
-            <span className="text-[9px] font-black text-navy/20 uppercase tracking-widest">Трансляция</span>
-          )}
+      <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {match.broadcastUrl ? (
+              <a 
+                href={match.broadcastUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[10px] font-black text-bright-blue uppercase tracking-widest hover:underline"
+              >
+                <Video className="w-3.5 h-3.5" />
+                Эфир
+              </a>
+            ) : (
+              <span className="flex items-center gap-1.5 text-[10px] font-black text-white/20 uppercase tracking-widest">
+                <Video className="w-3.5 h-3.5" />
+                Оффлайн
+              </span>
+            )}
+          </div>
           {match.weather && (
-            <span className="text-[8px] font-bold text-navy/30 uppercase tracking-widest">
+            <span className="text-[9px] font-bold text-neon-yellow uppercase tracking-widest flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-neon-yellow animate-pulse" />
               {match.weather}
             </span>
           )}
@@ -786,17 +918,17 @@ const AppFooter = () => {
           {/* Install Card */}
           <motion.div 
             whileHover={{ y: -5 }}
-            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col justify-between"
+            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
           >
-            <div>
-              <h3 className="text-sm text-strong text-navy mb-1">Приложение на главном экране</h3>
-              <p className="text-[10px] font-medium text-navy/40 mb-4 leading-relaxed">
+            <div className="flex flex-col items-center">
+              <h3 className="text-sm text-strong text-white mb-1">Приложение на главном экране</h3>
+              <p className="text-[10px] font-medium text-white/60 mb-4 leading-relaxed">
                 Установите РЮФЛ-2026 как приложение для быстрого доступа к результатам
               </p>
             </div>
             <button 
               onClick={handleInstall}
-              className="w-full bg-bright-blue text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-bright-blue/20"
+              className="w-full max-w-[200px] bg-bright-blue text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-bright-blue/20"
             >
               <Download className="w-3.5 h-3.5" />
               Установить
@@ -806,13 +938,13 @@ const AppFooter = () => {
           {/* Support Card */}
           <motion.div 
             whileHover={{ y: -5 }}
-            className="glass-card rounded-[32px] p-6 border border-white/40"
+            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
           >
-            <h3 className="text-sm text-strong text-navy mb-1">Поддержать проект</h3>
-            <p className="text-[10px] font-medium text-navy/40 mb-4 leading-relaxed">
+            <h3 className="text-sm text-strong text-white mb-1">Поддержать проект</h3>
+            <p className="text-[10px] font-medium text-white/60 mb-4 leading-relaxed">
               Ваша поддержка помогает развивать приложение и обновлять данные
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 w-full">
               <button 
                 onClick={() => copyToClipboard('4276500050261351', 'sber')}
                 className="flex-1 h-12 bg-white/50 rounded-2xl border border-white/40 flex items-center justify-center relative group overflow-hidden transition-all active:scale-95"
@@ -826,7 +958,7 @@ const AppFooter = () => {
                     <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
                       <div className="w-3 h-3 bg-white rounded-full opacity-80" />
                     </div>
-                    <span className="text-[10px] font-black text-navy/60 uppercase tracking-tighter">Сбер</span>
+                    <span className="text-[10px] font-black text-white/80 uppercase tracking-tighter">Сбер</span>
                   </div>
                 )}
               </button>
@@ -843,7 +975,7 @@ const AppFooter = () => {
                     <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
                       <div className="w-3 h-3 bg-navy rounded-full opacity-80" />
                     </div>
-                    <span className="text-[10px] font-black text-navy/60 uppercase tracking-tighter">Т-Банк</span>
+                    <span className="text-[10px] font-black text-white/80 uppercase tracking-tighter">Т-Банк</span>
                   </div>
                 )}
               </button>
@@ -892,7 +1024,7 @@ export default function App() {
             name: row['имя'] || 'Без имени',
             position: row['позиция'] || 'защ',
             goals: parseInt(row['голы']) || 0,
-            photoUrl: `https://picsum.photos/seed/${row['имя'] || idx}/200`
+            photoUrl: row['фото'] || `https://picsum.photos/seed/${row['имя'] || idx}/200`
           }));
         } else {
           // Fallback static data if URL is not provided yet
@@ -931,51 +1063,82 @@ export default function App() {
             });
 
             // Calculate Table
-            const teams = Array.from(new Set(matches.flatMap(m => [m.homeTeam, m.awayTeam])));
-            const table: TableRow[] = teams.map(team => {
-              const teamMatches = matches.filter(m => (m.homeTeam === team || m.awayTeam === team) && m.status === 'Завершен');
-              
-              let won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0;
-              const lastGames: ('W' | 'D' | 'L')[] = [];
-
-              teamMatches.forEach(m => {
-                const isHome = m.homeTeam === team;
-                const score = isHome ? m.homeScore! : m.awayScore!;
-                const oppScore = isHome ? m.awayScore! : m.homeScore!;
+            const calculateTable = (matchList: Match[]) => {
+              const teams = Array.from(new Set(matchList.flatMap(m => [m.homeTeam, m.awayTeam])));
+              const tableData = teams.map(team => {
+                const teamMatches = matchList.filter(m => (m.homeTeam === team || m.awayTeam === team) && m.status === 'Завершен');
                 
-                goalsFor += score;
-                goalsAgainst += oppScore;
+                let won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0;
+                const lastGames: ('W' | 'D' | 'L')[] = [];
 
-                if (score > oppScore) {
-                  won++;
-                  lastGames.push('W');
-                } else if (score === oppScore) {
-                  drawn++;
-                  lastGames.push('D');
-                } else {
-                  lost++;
-                  lastGames.push('L');
-                }
+                teamMatches.forEach(m => {
+                  const isHome = m.homeTeam === team;
+                  const score = isHome ? m.homeScore! : m.awayScore!;
+                  const oppScore = isHome ? m.awayScore! : m.homeScore!;
+                  
+                  goalsFor += score;
+                  goalsAgainst += oppScore;
+
+                  if (score > oppScore) {
+                    won++;
+                    lastGames.push('W');
+                  } else if (score === oppScore) {
+                    drawn++;
+                    lastGames.push('D');
+                  } else {
+                    lost++;
+                    lastGames.push('L');
+                  }
+                });
+
+                return {
+                  teamName: team,
+                  played: teamMatches.length,
+                  won,
+                  drawn,
+                  lost,
+                  goalsFor,
+                  goalsAgainst,
+                  points: won * 3 + drawn,
+                  lastGames: lastGames.slice(-5),
+                  rank: 0,
+                  rankChange: 0 
+                };
               });
 
-              return {
-                teamName: team,
-                played: teamMatches.length,
-                won,
-                drawn,
-                lost,
-                goalsFor,
-                goalsAgainst,
-                points: won * 3 + drawn,
-                lastGames: lastGames.slice(-5),
-                rank: 0 
-              };
-            });
+              tableData.sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || b.goalsFor - a.goalsFor);
+              tableData.forEach((row, idx) => row.rank = idx + 1);
+              return tableData;
+            };
 
-            table.sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || b.goalsFor - a.goalsFor);
-            table.forEach((row, idx) => row.rank = idx + 1);
+            const currentTable = calculateTable(matches);
+            
+            // Calculate Previous Table for Rank Change
+            const finishedMatches = matches.filter(m => m.status === 'Завершен');
+            if (finishedMatches.length > 0) {
+              const dates = Array.from(new Set(finishedMatches.map(m => m.date)));
+              dates.sort((a, b) => {
+                const [da, ma, ya] = a.split('.').map(Number);
+                const [db, mb, yb] = b.split('.').map(Number);
+                return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
+              });
+              
+              const lastDate = dates[dates.length - 1];
+              const previousMatches = finishedMatches.filter(m => m.date !== lastDate);
+              const previousTable = calculateTable(previousMatches);
 
-            const dinamoStats = table.find(t => t.teamName === 'Динамо-Владивосток') || { rank: '-', points: 0, lastResults: [] };
+              currentTable.forEach(row => {
+                const prevRow = previousTable.find(p => p.teamName === row.teamName);
+                if (prevRow && row.played > prevRow.played) {
+                  row.rankChange = prevRow.rank - row.rank;
+                } else {
+                  row.rankChange = 0;
+                }
+              });
+            }
+
+            const table = currentTable;
+            const dinamoRow = table.find(t => t.teamName === 'Динамо-Владивосток');
             const nextMatch = matches.find(m => m.status === 'Ожидается' && (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток')) || null;
             const upcomingMatches = matches.filter(m => m.status === 'Ожидается').sort((a, b) => a.id - b.id).slice(0, 5);
 
@@ -986,9 +1149,9 @@ export default function App() {
               recentMatches: [], // Removed
               nextMatch,
               dinamoStats: {
-                rank: dinamoStats.rank,
-                points: dinamoStats.points,
-                lastResults: (dinamoStats as any).lastGames || []
+                rank: dinamoRow?.rank || 0,
+                points: dinamoRow?.points || 0,
+                lastResults: dinamoRow?.lastGames || []
               },
               dinamoPlayers: playersData
             });

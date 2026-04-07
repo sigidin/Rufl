@@ -7,6 +7,7 @@ export interface Team {
 
 export interface TableRow {
   rank: number;
+  rankChange?: number; // New: positive for up, negative for down
   teamName: string;
   played: number;
   won: number;
