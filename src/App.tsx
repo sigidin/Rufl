@@ -40,6 +40,19 @@ const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TD
 
 // --- Components ---
 
+const formatDate = (dateStr: string) => {
+  try {
+    const [day, month] = dateStr.split('.').map(Number);
+    const months = [
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ];
+    return `${day} ${months[month - 1]}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const Header = () => (
   <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl">
     <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center text-center relative overflow-hidden">
@@ -114,17 +127,13 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
           whileHover={{ y: -5 }}
           className="glass-card rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden border-bright-blue/30 cyber-border"
         >
-          <div className="absolute top-0 right-0 p-4">
-             <div className="text-[10px] font-black text-bright-blue/40 uppercase tracking-[0.2em]">Прямой эфир</div>
-          </div>
-
           <div className="relative z-10">
             <div className="flex flex-col items-center mb-8">
-              <div className="flex flex-col items-center gap-2 mb-3">
+              <div className="flex flex-col items-center gap-2">
                 <div className="flex items-center gap-3">
-                  <span className="text-lg font-black text-bright-blue">{match.date}</span>
+                  <span className="text-xl font-black text-bright-blue">{formatDate(match.date)}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                  <span className="text-lg font-black text-white">{match.time}</span>
+                  <span className="text-xl font-black text-white">{match.time}</span>
                 </div>
                 <button 
                   onClick={copyAddress}
@@ -136,22 +145,22 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                 </button>
               </div>
               {match.weather && (
-                <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em]">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em] mt-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-pulse" />
                   Погода: {match.weather}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-4 mb-10">
+            <div className="flex items-center justify-center gap-4 md:gap-12 mb-10">
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-20 h-20 bg-navy/80 rounded-2xl flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow"
+                  className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.homeTeam} size="w-14 h-14" />
+                  <TeamLogo name={match.homeTeam} size="w-16 h-16" />
                 </motion.div>
-                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center">
+                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.homeTeam}
                 </div>
                 <div className="flex gap-1.5 justify-center">
@@ -159,22 +168,23 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                 </div>
               </div>
 
-              <div className="flex flex-col items-center">
-                <div className="bg-bright-blue/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-bright-blue/30 min-w-[140px] flex justify-center shadow-[0_0_20px_rgba(0,240,255,0.1)]">
-                  <div className="text-5xl font-black text-white tracking-tighter italic">
-                    VS
-                  </div>
-                </div>
+              <div className="flex flex-col items-center justify-center">
+                <motion.div 
+                  whileHover={{ scale: 1.2, textShadow: "0 0 20px rgba(0, 240, 255, 0.8)" }}
+                  className="text-5xl font-black text-white tracking-tighter italic transition-all cursor-default select-none"
+                >
+                  VS
+                </motion.div>
               </div>
 
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: -5 }}
-                  className="w-20 h-20 bg-navy/80 rounded-2xl flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow"
+                  className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.awayTeam} size="w-14 h-14" />
+                  <TeamLogo name={match.awayTeam} size="w-16 h-16" />
                 </motion.div>
-                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center">
+                <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.awayTeam}
                 </div>
                 <div className="flex gap-1.5 justify-center">
@@ -294,19 +304,10 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
             className="p-8 cursor-pointer relative"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            <div className="absolute top-0 right-0 p-6">
-               <img 
-                 src="https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png" 
-                 alt="" 
-                 className="w-32 h-32 opacity-10 rotate-12 object-contain"
-                 referrerPolicy="no-referrer"
-               />
-            </div>
-
             <div className="flex flex-col items-center text-center relative z-10">
               <motion.div 
                 layout
-                className="w-28 h-28 gradient-bg rounded-[32px] flex items-center justify-center shadow-2xl mb-6 border-4 border-bright-blue/20 neon-glow p-4"
+                className="w-28 h-28 gradient-bg rounded-full flex items-center justify-center shadow-2xl mb-6 border-4 border-bright-blue/20 neon-glow p-4"
               >
                 <img 
                   src="https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png" 
@@ -530,7 +531,7 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
                     </td>
                     <td className="px-4 py-5 font-bold text-white whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <TeamLogo name={row.teamName} size="w-6 h-6" />
+                        <TeamLogo name={row.teamName} size="w-8 h-8" />
                         <span className={isDinamo ? 'text-bright-blue' : ''}>{row.teamName}</span>
                       </div>
                     </td>
@@ -569,7 +570,7 @@ const TeamLogo = ({ name, size = "w-6 h-6" }: { name: string, size?: string }) =
 
   if (logoUrl) {
     return (
-      <div className={`${size} flex items-center justify-center overflow-hidden rounded-md`}>
+      <div className={`${size} flex items-center justify-center overflow-hidden rounded-full`}>
         <img 
           src={logoUrl} 
           alt={name} 
@@ -639,7 +640,7 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
           {/* Line 1: Date */}
           <div className="flex items-center gap-3 mb-2">
             <span className="bg-bright-blue/10 text-bright-blue text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">{dayOfWeek}</span>
-            <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">{match.date}</span>
+            <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">{formatDate(match.date)}</span>
           </div>
           
           {/* Line 2: Location + Icons */}
@@ -720,46 +721,72 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
     });
   };
 
+  const formatTeamName = (name: string) => {
+    if (name.includes('-')) {
+      const parts = name.split('-');
+      return (
+        <div className="flex flex-col items-center">
+          <span className="uppercase">{parts[0]}</span>
+          <span className="text-[10px] opacity-60 font-medium">{parts[1]}</span>
+        </div>
+      );
+    }
+    if (name.includes(' ')) {
+      const parts = name.split(' ');
+      return (
+        <div className="flex flex-col items-center">
+          <span className="uppercase">{parts[0]}</span>
+          <span className="text-[10px] opacity-60 font-medium">{parts[1]}</span>
+        </div>
+      );
+    }
+    return <span className="uppercase">{name}</span>;
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -5, scale: 1.02 }}
-      className="bg-navy/60 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border border-bright-blue/20 min-w-[300px] flex-shrink-0 transition-all cyber-border"
+      className="bg-navy/60 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border border-bright-blue/20 min-w-[300px] flex-shrink-0 transition-all cyber-border overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-center mb-5">
         <div className="flex items-center gap-2">
           <span className="gradient-bg text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">{dayOfWeek}</span>
-          <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">{match.date}</span>
+          <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">{formatDate(match.date)}</span>
         </div>
-        <button 
-          onClick={copyAddress}
-          className="flex items-center gap-1.5 text-[9px] font-bold text-bright-blue uppercase tracking-widest hover:text-white transition-colors group"
-        >
-          <Navigation className={`w-3 h-3 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
-          <span className={`truncate max-w-[100px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано!' : match.location}</span>
-        </button>
       </div>
       
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow">
-            <TeamLogo name={match.homeTeam} size="w-8 h-8" />
+          <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
+            <TeamLogo name={match.homeTeam} size="w-10 h-10" />
           </div>
-          <span className="text-[12px] text-strong text-white truncate w-full text-center">{match.homeTeam}</span>
+          <div className="text-[12px] text-strong text-white w-full text-center leading-tight">
+            {formatTeamName(match.homeTeam)}
+          </div>
         </div>
         <div className="flex flex-col items-center px-2">
           <span className="text-[10px] font-black text-white/10 mb-1">VS</span>
           <span className="text-lg font-black text-bright-blue italic">{match.time}</span>
+          <button 
+            onClick={copyAddress}
+            className="mt-2 flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
+          >
+            <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
+            <span className={`truncate max-w-[80px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'OK!' : match.location}</span>
+          </button>
         </div>
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow">
-            <TeamLogo name={match.awayTeam} size="w-8 h-8" />
+          <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
+            <TeamLogo name={match.awayTeam} size="w-10 h-10" />
           </div>
-          <span className="text-[12px] text-strong text-white truncate w-full text-center">{match.awayTeam}</span>
+          <div className="text-[12px] text-strong text-white w-full text-center leading-tight">
+            {formatTeamName(match.awayTeam)}
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
-        <div className="flex items-center justify-between">
+        <div className="flex justify-center">
           <div className="flex items-center gap-2">
             {match.broadcastUrl ? (
               <a 
@@ -778,12 +805,6 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
               </span>
             )}
           </div>
-          {match.weather && (
-            <span className="text-[9px] font-bold text-neon-yellow uppercase tracking-widest flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-neon-yellow animate-pulse" />
-              {match.weather}
-            </span>
-          )}
         </div>
       </div>
     </motion.div>
@@ -844,7 +865,7 @@ const PastMatchesList = ({ matches }: { matches: Match[] }) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="glass-card rounded-2xl border border-white/20 overflow-hidden">
           <div 
-            className="p-4 flex items-center justify-between bg-white/30 cursor-pointer hover:bg-white/40 transition-colors"
+            className="p-4 flex items-center justify-center bg-white/30 cursor-pointer hover:bg-white/40 transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <div className="flex items-center gap-3">
@@ -853,7 +874,7 @@ const PastMatchesList = ({ matches }: { matches: Match[] }) => {
               </div>
               <h3 className="text-sm text-strong text-navy uppercase tracking-wider">Прошедшие матчи</h3>
             </div>
-            <div className="text-navy/40">
+            <div className="text-navy/40 absolute right-4">
               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </div>
           </div>
