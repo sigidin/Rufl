@@ -41,6 +41,9 @@ const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TD
 
 // --- Components ---
 
+import { db, startPresence, incrementMonthlyVisitors, handleFirestoreError, OperationType } from './firebase';
+import { collection, doc, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+
 const formatDate = (dateStr: string) => {
   try {
     const [day, month] = dateStr.split('.').map(Number);
@@ -128,6 +131,18 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
           whileHover={{ y: -5 }}
           className="glass-card rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden border-bright-blue/30 cyber-border"
         >
+          {/* Background Pattern - Tiled */}
+          <div 
+            className="absolute inset-0 opacity-70 pointer-events-none"
+            style={{ 
+              backgroundImage: 'url(https://i.ibb.co/XxmbRT8g/BG-2-2.jpg)',
+              backgroundRepeat: 'repeat',
+              backgroundSize: '400px'
+            }}
+          >
+            <div className="absolute inset-0 bg-navy/30" />
+          </div>
+
           <div className="relative z-10">
             <div className="flex flex-col items-center mb-8">
               <div className="flex flex-col items-center gap-2">
@@ -138,10 +153,12 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                 </div>
                 <button 
                   onClick={copyAddress}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group relative"
                 >
                   <Navigation className={`w-3.5 h-3.5 ${copied ? 'text-green-400' : 'text-bright-blue group-hover:animate-bounce'}`} />
-                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">{match.location}</span>
+                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                    {copied ? 'Скопировано' : match.location}
+                  </span>
                   {copied && <Check className="w-3 h-3 text-green-400" />}
                 </button>
               </div>
@@ -299,10 +316,22 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
         <motion.div 
           layout
           whileHover={{ y: -5 }}
-          className="glass-card rounded-[40px] shadow-2xl border border-bright-blue/30 overflow-hidden cyber-border"
+          className="glass-card rounded-[40px] shadow-2xl border border-bright-blue/30 overflow-hidden cyber-border relative"
         >
+          {/* Background Pattern - Tiled */}
           <div 
-            className="p-6 cursor-pointer relative"
+            className="absolute inset-0 opacity-70 pointer-events-none"
+            style={{ 
+              backgroundImage: 'url(https://i.ibb.co/XxmbRT8g/BG-2-2.jpg)',
+              backgroundRepeat: 'repeat',
+              backgroundSize: '400px'
+            }}
+          >
+            <div className="absolute inset-0 bg-navy/30" />
+          </div>
+
+          <div 
+            className="p-6 cursor-pointer relative z-10"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <div className="flex flex-col items-center text-center relative z-10">
@@ -310,7 +339,7 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
                 layout
                 className="w-28 h-28 gradient-bg rounded-full flex items-center justify-center shadow-2xl mb-4 border-4 border-bright-blue/20 neon-glow p-4"
               >
-                <TeamLogo name="Динамо-Владивосток" size="w-full h-full" scale="w-[170%] h-[170%]" />
+                <TeamLogo name="Динамо-Владивосток" size="w-full h-full" scale="w-[210%] h-[210%]" />
               </motion.div>
               
               <div className="flex flex-col items-center mb-4">
@@ -603,6 +632,42 @@ const getDayOfWeek = (dateStr: string) => {
 };
 
 const FarEastMap = () => {
+  const [monthlyVisitors, setMonthlyVisitors] = useState<number>(1248);
+  const [onlineNow, setOnlineNow] = useState<number>(42);
+
+  useEffect(() => {
+    // Increment monthly visitors
+    incrementMonthlyVisitors();
+
+    // Start presence heartbeat
+    const stopPresence = startPresence();
+
+    // Listen for monthly visitors
+    const unsubVisitors = onSnapshot(doc(db, 'stats', 'visitors'), (doc) => {
+      if (doc.exists()) {
+        setMonthlyVisitors(doc.data().monthlyCount);
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'stats/visitors');
+    });
+
+    // Listen for online users (active in last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const q = query(collection(db, 'presence'), where('lastSeen', '>=', Timestamp.fromDate(fiveMinutesAgo)));
+    
+    const unsubOnline = onSnapshot(q, (snapshot) => {
+      setOnlineNow(snapshot.size);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'presence');
+    });
+
+    return () => {
+      stopPresence();
+      unsubVisitors();
+      unsubOnline();
+    };
+  }, []);
+
   return (
     <div className="px-0 py-10 max-w-4xl mx-auto relative">
       <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
@@ -620,7 +685,7 @@ const FarEastMap = () => {
               <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Посетителей за месяц</span>
               <div className="flex items-center gap-2">
                 <Users className="w-3 h-3 text-bright-blue" />
-                <span className="text-xs font-black text-white tracking-wider">1,248</span>
+                <span className="text-xs font-black text-white tracking-wider">{monthlyVisitors.toLocaleString()}</span>
               </div>
             </div>
             <div className="w-px h-6 bg-white/10" />
@@ -628,7 +693,7 @@ const FarEastMap = () => {
               <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Сейчас онлайн</span>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-black text-white tracking-wider">42</span>
+                <span className="text-xs font-black text-white tracking-wider">{onlineNow}</span>
               </div>
             </div>
           </div>
@@ -795,7 +860,7 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
           className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
         >
           <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
-          <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'OK!' : match.location}</span>
+          <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано' : match.location}</span>
         </button>
       </div>
 
@@ -998,7 +1063,7 @@ const AppFooter = () => {
                 title="Скопировать номер карты Сбер"
               >
                 {copied === 'sber' ? (
-                  <Check className="w-5 h-5 text-green-400 animate-in zoom-in" />
+                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Скопировано</span>
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
@@ -1016,7 +1081,7 @@ const AppFooter = () => {
                 title="Скопировать номер карты Т-Банк"
               >
                 {copied === 'tbank' ? (
-                  <Check className="w-5 h-5 text-green-400 animate-in zoom-in" />
+                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Скопировано</span>
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">

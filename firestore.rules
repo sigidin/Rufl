@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: stats
+    // Document ID: visitors
+    // Fields:
+    //   - monthlyCount: number (required) - Total visitors this month
+    //   - lastReset: string (optional) - ISO date of last reset
+    //
+    // Collection: presence
+    // Document ID: {sessionId}
+    // Fields:
+    //   - lastSeen: timestamp (required) - Last heartbeat
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidVisitorStats(data) {
+      return data.keys().hasOnly(['monthlyCount', 'lastReset']) &&
+             data.monthlyCount is number &&
+             (!('lastReset' in data) || data.lastReset is string);
+    }
+
+    function isValidPresence(data) {
+      return data.keys().hasOnly(['lastSeen']) &&
+             data.lastSeen is timestamp;
+    }
+
+    function isRecent(time) {
+      return time > request.time - duration.value(5, 'm') &&
+             time <= request.time;
+    }
+
+    // Rules
+    match /stats/visitors {
+      allow read: if true;
+      // Allow anyone to increment the counter
+      allow create: if isValidVisitorStats(request.resource.data);
+      allow update: if isValidVisitorStats(request.resource.data) &&
+                      request.resource.data.monthlyCount == resource.data.monthlyCount + 1;
+    }
+
+    match /presence/{sessionId} {
+      allow read: if true;
+      allow create: if isValidPresence(request.resource.data) && 
+                      isRecent(request.resource.data.lastSeen);
+      allow update: if isValidPresence(request.resource.data) && 
+                      isRecent(request.resource.data.lastSeen);
+      // Allow deletion of own session (client-side cleanup)
+      allow delete: if true; 
+    }
+  }
+}

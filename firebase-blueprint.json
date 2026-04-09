@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "VisitorStats": {
+      "title": "VisitorStats",
+      "description": "Global statistics for the application",
+      "type": "object",
+      "properties": {
+        "monthlyCount": {
+          "type": "number",
+          "description": "Total number of visitors this month"
+        },
+        "lastReset": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last time the monthly counter was reset"
+        }
+      },
+      "required": ["monthlyCount"]
+    },
+    "OnlineSession": {
+      "title": "OnlineSession",
+      "description": "A record of an active user session",
+      "type": "object",
+      "properties": {
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last heartbeat from this session"
+        }
+      },
+      "required": ["lastSeen"]
+    }
+  },
+  "firestore": {
+    "/stats/visitors": {
+      "schema": "VisitorStats",
+      "description": "Global visitor statistics"
+    },
+    "/presence/{sessionId}": {
+      "schema": "OnlineSession",
+      "description": "Active user sessions for real-time online count"
+    }
+  }
+}
