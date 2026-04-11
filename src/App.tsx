@@ -27,17 +27,19 @@ import {
   Navigation,
   ExternalLink,
   Video,
-  Users
+  Users,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Papa from 'papaparse';
 import * as d3 from 'd3';
+import confetti from 'canvas-confetti';
 import { MOCK_DATA } from './mockData';
 import { TournamentData, Match, TableRow, Player } from './types';
 
 const MATCHES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZwYgX3nA_CTjCHnf7VbNv4T4kHRG1nSMJ-TSgEhxrPKduWOP9XRovOK2t44g0lD28uxspnxyY/pub?gid=80457916&single=true&output=csv';
-// Замените эту ссылку на вашу новую ссылку для листа "Игроки"
 const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZwYgX3nA_CTjCHnf7VbNv4T4kHRG1nSMJ-TSgEhxrPKduWOP9XRovOK2t44g0lD28uxspnxyY/pub?gid=164242498&single=true&output=csv'; 
+const LOGOS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZwYgX3nA_CTjCHnf7VbNv4T4kHRG1nSMJ-TSgEhxrPKduWOP9XRovOK2t44g0lD28uxspnxyY/pub?gid=0&single=true&output=csv'; // Замените gid=0 на нужный ID листа с логотипами
 
 // --- Components ---
 
@@ -57,22 +59,43 @@ const formatDate = (dateStr: string) => {
   }
 };
 
-const Header = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl">
-    <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center text-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
-      <div className="flex flex-col items-center">
-        <div className="text-[10px] text-strong text-bright-blue tracking-[0.4em] animate-pulse mb-1">неофициальное приложение</div>
-        <h1 className="text-2xl md:text-3xl text-strong gradient-text glitch-hover cursor-default leading-tight">
-          ДИНАМО на РЮФЛ-26!
-        </h1>
+const Header = () => {
+  const [clicks, setClicks] = useState(0);
+
+  const handleEasterEgg = () => {
+    const newClicks = clicks + 1;
+    setClicks(newClicks);
+    if (newClicks >= 10) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#00F0FF', '#FFFFFF', '#0072FF']
+      });
+      setClicks(0);
+    }
+  };
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
+        <div className="flex flex-col items-center">
+          <div className="text-[10px] text-strong text-bright-blue tracking-[0.4em] animate-pulse mb-1">неофициальное приложение</div>
+          <h1 
+            onClick={handleEasterEgg}
+            className="text-2xl md:text-3xl text-strong gradient-text glitch-hover cursor-pointer leading-tight select-none"
+          >
+            ДИНАМО на РЮФЛ-26!
+          </h1>
+        </div>
+        <p className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] mt-1">
+          Региональная юношеская футбольная лига | Дальний Восток
+        </p>
       </div>
-      <p className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] mt-1">
-        Russian Youth Football League | Дальний Восток
-      </p>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
 
 const ResultCircle = ({ result }: { result: 'W' | 'D' | 'L', key?: React.Key }) => {
   const colors = {
@@ -85,7 +108,7 @@ const ResultCircle = ({ result }: { result: 'W' | 'D' | 'L', key?: React.Key }) 
   );
 };
 
-const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[] }) => {
+const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: TableRow[], logos: Record<string, string> }) => {
   const [copied, setCopied] = useState(false);
   const [showStream, setShowStream] = useState(false);
   if (!match) return null;
@@ -176,7 +199,7 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.homeTeam} size="w-16 h-16" />
+                  <TeamLogo name={match.homeTeam} logos={logos} size="w-16 h-16" />
                 </motion.div>
                 <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.homeTeam}
@@ -200,7 +223,7 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
                   whileHover={{ scale: 1.1, rotate: -5 }}
                   className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.awayTeam} size="w-16 h-16" />
+                  <TeamLogo name={match.awayTeam} logos={logos} size="w-16 h-16" />
                 </motion.div>
                 <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.awayTeam}
@@ -275,7 +298,7 @@ const NextMatchCard = ({ match, table }: { match: Match | null, table: TableRow[
   );
 };
 
-const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoStats'], players: Player[] }) => {
+const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['dinamoStats'], players: Player[], logos: Record<string, string> }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'goals'>('goals');
 
@@ -339,7 +362,7 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
                 layout
                 className="w-28 h-28 gradient-bg rounded-full flex items-center justify-center shadow-2xl mb-4 border-4 border-bright-blue/20 neon-glow p-4"
               >
-                <TeamLogo name="Динамо-Владивосток" size="w-full h-full" scale="w-[210%] h-[210%]" />
+                <TeamLogo name="Динамо" logos={logos} size="w-full h-full" scale="w-[270%] h-[270%]" />
               </motion.div>
               
               <div className="flex flex-col items-center mb-4">
@@ -394,7 +417,12 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
               >
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-10">
-                    <h3 className="text-xl text-strong text-white italic">Состав команды</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-bright-blue/20 flex items-center justify-center border border-bright-blue/40">
+                        <img src="/icons/roster.png" alt="Состав" className="w-8 h-8 object-contain" />
+                      </div>
+                      <h3 className="text-xl text-strong text-white italic">Состав команды</h3>
+                    </div>
                     <div className="flex gap-3">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('name'); }}
@@ -486,7 +514,7 @@ const DinamoSpecialCard = ({ stats, players }: { stats: TournamentData['dinamoSt
   );
 };
 
-const SectionTitle = ({ title, icon: Icon }: { title: string; icon: any }) => (
+const SectionTitle = ({ title, icon: Icon, imageSrc }: { title: string; icon?: any; imageSrc?: string }) => (
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -498,43 +526,47 @@ const SectionTitle = ({ title, icon: Icon }: { title: string; icon: any }) => (
       className="bg-navy/60 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-4 border border-bright-blue/30 shadow-[0_0_20px_rgba(0,240,255,0.15)] cyber-border"
     >
       <motion.div 
-        whileHover={{ rotate: 180 }}
+        whileHover={{ rotate: imageSrc ? 0 : 180 }}
         transition={{ duration: 0.5 }}
-        className="p-2.5 gradient-bg rounded-xl shadow-lg"
+        className="p-2.5 gradient-bg rounded-xl shadow-lg flex items-center justify-center"
       >
-        <Icon className="w-6 h-6 text-white" />
+        {imageSrc ? (
+          <img src={imageSrc} alt={title} className="w-8 h-8 object-contain" />
+        ) : (
+          <Icon className="w-6 h-6 text-white" />
+        )}
       </motion.div>
-      <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest italic">{title}</h3>
+      <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest">{title}</h3>
     </motion.div>
   </motion.div>
 );
 
-const TournamentTable = ({ data }: { data: TableRow[] }) => (
+const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<string, string> }) => (
   <section className="py-10">
     <div className="max-w-4xl mx-auto">
-      <SectionTitle title="Турнирная таблица" icon={Trophy} />
-      <div className="px-2">
+      <SectionTitle title="Турнирная таблица" icon={Trophy} imageSrc="/icons/table.png" />
+      <div className="px-1 md:px-2">
         <div className="glass-card rounded-2xl shadow-2xl border border-bright-blue/20 overflow-hidden cyber-border">
           <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left text-[11px] md:text-sm">
-            <thead className="bg-navy/80 text-bright-blue uppercase text-[9px] font-black tracking-widest border-b border-bright-blue/20">
+            <table className="w-full text-left text-[10px] md:text-sm">
+            <thead className="bg-navy/80 text-bright-blue uppercase text-[8px] font-black tracking-widest border-b border-bright-blue/20">
               <tr>
-                <th className="px-2 py-4 text-center w-8">#</th>
-                <th className="px-3 py-4">Команда</th>
-                <th className="px-2 py-4 text-center">О</th>
-                <th className="px-2 py-4 text-center">И</th>
-                <th className="px-2 py-4 text-center">В</th>
-                <th className="px-2 py-4 text-center">Н</th>
-                <th className="px-2 py-4 text-center">П</th>
-                <th className="px-2 py-4 text-center hidden sm:table-cell">Мячи</th>
-                <th className="px-2 py-4 text-center">+/-</th>
-                <th className="px-3 py-4">Сыграны</th>
+                <th className="px-1.5 py-4 text-center w-6 md:w-8">#</th>
+                <th className="px-2 py-4">Команда</th>
+                <th className="px-1.5 py-4 text-center">О</th>
+                <th className="px-1.5 py-4 text-center">И</th>
+                <th className="px-1.5 py-4 text-center hidden md:table-cell">В</th>
+                <th className="px-1.5 py-4 text-center hidden md:table-cell">Н</th>
+                <th className="px-1.5 py-4 text-center hidden md:table-cell">П</th>
+                <th className="px-1.5 py-4 text-center hidden sm:table-cell">Мячи</th>
+                <th className="px-1.5 py-4 text-center">+/-</th>
+                <th className="px-2 py-4">Сыграны</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-bright-blue/10">
               {data.map((row) => {
-                const isDinamo = row.teamName === 'Динамо-Владивосток';
-                const teamParts = row.teamName.split('-');
+                const isDinamo = row.teamName.toLowerCase().includes('динамо');
+                const teamParts = row.teamName.split(/[\s-]/);
                 return (
                   <motion.tr 
                     initial={{ opacity: 0, x: -10 }}
@@ -544,27 +576,27 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
                     key={row.teamName} 
                     className={`${isDinamo ? 'bg-bright-blue/10' : ''} transition-colors`}
                   >
-                    <td className="px-2 py-4 text-center">
-                      <span className={`font-black ${isDinamo ? 'text-bright-blue text-base' : row.rank <= 3 ? 'text-green-400 text-base' : 'text-white/80'}`}>{row.rank}</span>
+                    <td className="px-1.5 py-4 text-center">
+                      <span className={`font-black ${isDinamo ? 'text-bright-blue text-sm' : row.rank <= 3 ? 'text-green-400 text-sm' : 'text-white/80'}`}>{row.rank}</span>
                     </td>
-                    <td className="px-3 py-4 font-bold text-white">
-                      <div className="flex items-center gap-2">
-                        <TeamLogo name={row.teamName} size="w-7 h-7" />
+                    <td className="px-2 py-4 font-bold text-white">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <TeamLogo name={row.teamName} logos={logos} size="w-7 h-7" />
                         <div className="flex flex-col leading-tight">
-                          <span className={`${isDinamo ? 'text-bright-blue' : ''} uppercase text-[11px] md:text-sm`}>{teamParts[0]}</span>
-                          {teamParts[1] && <span className="text-[9px] opacity-50 font-medium">{teamParts[1]}</span>}
+                          <span className={`${isDinamo ? 'text-bright-blue' : ''} uppercase text-[10px] md:text-sm`}>{teamParts[0]}</span>
+                          {teamParts.length > 1 && <span className="text-[9px] opacity-50 font-medium">{teamParts.slice(1).join(' ')}</span>}
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-bright-blue text-base md:text-lg">{row.points}</td>
-                    <td className="px-2 py-4 text-center font-medium text-white/70">{row.played}</td>
-                    <td className="px-2 py-4 text-center text-green-400 font-bold">{row.won}</td>
-                    <td className="px-2 py-4 text-center text-neon-yellow font-bold">{row.drawn}</td>
-                    <td className="px-2 py-4 text-center text-red-400 font-bold">{row.lost}</td>
-                    <td className="px-2 py-4 text-center text-white/50 hidden sm:table-cell">{row.goalsFor}-{row.goalsAgainst}</td>
-                    <td className="px-2 py-4 text-center font-medium text-white/70">{row.goalsFor - row.goalsAgainst}</td>
-                    <td className="px-3 py-4">
-                      <div className="flex gap-1">
+                    <td className="px-1.5 py-4 text-center font-black text-bright-blue text-sm md:text-lg">{row.points}</td>
+                    <td className="px-1.5 py-4 text-center font-medium text-white/70">{row.played}</td>
+                    <td className="px-1.5 py-4 text-center text-green-400 font-bold hidden md:table-cell">{row.won}</td>
+                    <td className="px-1.5 py-4 text-center text-neon-yellow font-bold hidden md:table-cell">{row.drawn}</td>
+                    <td className="px-1.5 py-4 text-center text-red-400 font-bold hidden md:table-cell">{row.lost}</td>
+                    <td className="px-1.5 py-4 text-center text-white/50 hidden sm:table-cell">{row.goalsFor}-{row.goalsAgainst}</td>
+                    <td className="px-1.5 py-4 text-center font-medium text-white/70">{row.goalsFor - row.goalsAgainst}</td>
+                    <td className="px-2 py-4">
+                      <div className="flex gap-0.5 md:gap-1">
                         {row.lastGames.map((r, i) => <ResultCircle key={i} result={r} />)}
                       </div>
                     </td>
@@ -576,24 +608,37 @@ const TournamentTable = ({ data }: { data: TableRow[] }) => (
         </div>
       </div>
     </div>
-    </div>
-  </section>
+  </div>
+</section>
 );
 
-const TEAM_LOGOS: Record<string, string> = {
-  'Динамо-Владивосток': 'https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png',
-  'Академия Динамо': 'https://fcdynamo25.ru/templates/fc-dinamo25/images/logo-blue.png',
-  // Добавьте сюда ссылки на логотипы других команд
-};
+const TeamLogo = ({ name, logos, size = "w-6 h-6", scale = "w-[130%] h-[130%]" }: { name: string, logos: Record<string, string>, size?: string, scale?: string }) => {
+  const logoUrl = logos ? logos[name] : undefined;
 
-const TeamLogo = ({ name, size = "w-6 h-6", scale = "w-[130%] h-[130%]" }: { name: string, size?: string, scale?: string }) => {
-  const logoUrl = TEAM_LOGOS[name];
+  // Local icons mapping
+  const localLogos: Record<string, string> = {
+    'динамо': '/icons/dinamo.png',
+    'искра': '/icons/iskra.png',
+    'сшор': '/icons/sshor1.png',
+    'рекорд': '/icons/rekord.png',
+    'благовещенск': '/icons/blagoveshchensk.png'
+  };
 
-  if (logoUrl) {
+  const getLocalLogo = () => {
+    const lowerName = name.toLowerCase();
+    for (const [key, path] of Object.entries(localLogos)) {
+      if (lowerName.includes(key)) return path;
+    }
+    return null;
+  };
+
+  const finalLogoUrl = logoUrl || getLocalLogo();
+
+  if (finalLogoUrl) {
     return (
       <div className={`${size} flex items-center justify-center overflow-hidden rounded-full`}>
         <img 
-          src={logoUrl} 
+          src={finalLogoUrl} 
           alt={name} 
           className={`${scale} object-contain max-w-none`}
           referrerPolicy="no-referrer"
@@ -604,12 +649,13 @@ const TeamLogo = ({ name, size = "w-6 h-6", scale = "w-[130%] h-[130%]" }: { nam
 
   // Placeholder logic for icons based on team name
   const getIcon = () => {
-    if (name.includes('Динамо')) return <Shield className="text-bright-blue" />;
-    if (name.includes('СКА')) return <Trophy className="text-red-500" />;
-    if (name.includes('Сахалин')) return <Navigation className="text-emerald-500" />;
-    if (name.includes('Благовещенск')) return <MapPin className="text-orange-500" />;
-    if (name.includes('Искра')) return <ArrowUpRight className="text-yellow-500" />;
-    if (name.includes('СШОР')) return <Info className="text-slate-500" />;
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('динамо')) return <Shield className="text-bright-blue" />;
+    if (lowerName.includes('ска')) return <Trophy className="text-red-500" />;
+    if (lowerName.includes('сахалин')) return <Navigation className="text-emerald-500" />;
+    if (lowerName.includes('благовещенск')) return <MapPin className="text-orange-500" />;
+    if (lowerName.includes('искра')) return <ArrowUpRight className="text-yellow-500" />;
+    if (lowerName.includes('сшор')) return <Info className="text-slate-500" />;
     return <Circle className="text-slate-300" />;
   };
 
@@ -670,6 +716,7 @@ const FarEastMap = () => {
 
   return (
     <div className="px-0 py-10 max-w-4xl mx-auto relative">
+      <SectionTitle title="География турнира" icon={MapPin} imageSrc="/icons/stats.png" />
       <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
         <img 
           src="https://files.catbox.moe/ya1luu.png" 
@@ -679,20 +726,21 @@ const FarEastMap = () => {
         />
         
         {/* Visitor Stats Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-navy/80 backdrop-blur-md border-t border-white/10 p-4">
-          <div className="flex justify-center gap-8">
+        <div className="absolute bottom-4 left-4 right-4 glass-card border border-white/20 backdrop-blur-xl rounded-2xl p-4 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
+          <div className="flex justify-center gap-8 relative z-10">
             <div className="flex flex-col items-center">
-              <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Посетителей за месяц</span>
+              <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Посетителей за месяц</span>
               <div className="flex items-center gap-2">
-                <Users className="w-3 h-3 text-bright-blue" />
+                <Users className="w-3.5 h-3.5 text-bright-blue" />
                 <span className="text-xs font-black text-white tracking-wider">{monthlyVisitors.toLocaleString()}</span>
               </div>
             </div>
             <div className="w-px h-6 bg-white/10" />
             <div className="flex flex-col items-center">
-              <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Сейчас онлайн</span>
+              <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Сейчас онлайн</span>
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
                 <span className="text-xs font-black text-white tracking-wider">{onlineNow}</span>
               </div>
             </div>
@@ -703,7 +751,7 @@ const FarEastMap = () => {
   );
 };
 
-const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
+const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ match, logos }) => {
   const isFinished = !!(match.homeScore !== undefined && match.awayScore !== undefined);
   const dayOfWeek = getDayOfWeek(match.date);
 
@@ -761,7 +809,7 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <TeamLogo name={match.homeTeam} size="w-7 h-7" />
+              <TeamLogo name={match.homeTeam} logos={logos} size="w-7 h-7" />
               <span className={`text-base ${match.homeTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.homeTeam}
               </span>
@@ -770,7 +818,7 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <TeamLogo name={match.awayTeam} size="w-7 h-7" />
+              <TeamLogo name={match.awayTeam} logos={logos} size="w-7 h-7" />
               <span className={`text-base ${match.awayTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.awayTeam}
               </span>
@@ -783,7 +831,7 @@ const MatchRow: React.FC<{ match: Match }> = ({ match }) => {
   );
 };
 
-const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
+const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> }> = ({ match, logos }) => {
   const [copied, setCopied] = useState(false);
   const dayOfWeek = getDayOfWeek(match.date);
 
@@ -832,7 +880,7 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
       <div className="flex items-center justify-between gap-4 mb-6 relative">
         <div className="flex flex-col items-center flex-1 overflow-hidden">
           <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
-            <TeamLogo name={match.homeTeam} size="w-10 h-10" />
+            <TeamLogo name={match.homeTeam} logos={logos} size="w-10 h-10" />
           </div>
           <div className="text-strong text-white w-full text-center leading-tight">
             {formatTeamName(match.homeTeam)}
@@ -845,7 +893,7 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
 
         <div className="flex flex-col items-center flex-1 overflow-hidden">
           <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
-            <TeamLogo name={match.awayTeam} size="w-10 h-10" />
+            <TeamLogo name={match.awayTeam} logos={logos} size="w-10 h-10" />
           </div>
           <div className="text-strong text-white w-full text-center leading-tight">
             {formatTeamName(match.awayTeam)}
@@ -890,12 +938,17 @@ const UpcomingMatchCard: React.FC<{ match: Match }> = ({ match }) => {
   );
 };
 
-const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, icon: any }) => {
+const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: string, icon: any, logos: Record<string, string> }) => {
   const isUpcoming = title === "Предстоящие матчи";
   
+  const isOurTeam = (name: string) => {
+    const lower = name.toLowerCase();
+    return lower.includes('динамо') && !lower.includes('академия');
+  };
+
   // Filter matches for Dinamo Vladivostok if it's the upcoming section
   const filteredMatches = isUpcoming 
-    ? matches.filter(m => (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток') && m.status === 'Ожидается')
+    ? matches.filter(m => (isOurTeam(m.homeTeam) || isOurTeam(m.awayTeam)) && m.status === 'Ожидается')
     : matches;
 
   // Sort upcoming matches by date
@@ -907,13 +960,21 @@ const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, 
       })
     : filteredMatches;
 
+  // Map section titles to local icons
+  const sectionIcons: Record<string, string> = {
+    "Предстоящие матчи": "/icons/calendar.png",
+    "Турнирная таблица": "/icons/table.png",
+    "Состав команды": "/icons/roster.png",
+    "География турнира": "/icons/stats.png"
+  };
+
   return (
     <div className="px-4 py-10">
-      <SectionTitle title={title} icon={icon} />
+      <SectionTitle title={title} icon={icon} imageSrc={sectionIcons[title]} />
       {isUpcoming ? (
         <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-4">
           {displayMatches.length > 0 ? (
-            displayMatches.slice(0, 5).map(match => <UpcomingMatchCard key={match.id} match={match} />)
+            displayMatches.slice(0, 5).map(match => <UpcomingMatchCard key={match.id} match={match} logos={logos} />)
           ) : (
             <div className="w-full p-12 text-center text-white/40 text-sm italic glass-card rounded-[32px] border border-white/20">Матчей не найдено</div>
           )}
@@ -931,7 +992,7 @@ const MatchList = ({ matches, title, icon }: { matches: Match[], title: string, 
   );
 };
 
-const PastMatchesList = ({ matches }: { matches: Match[] }) => {
+const PastMatchesList = ({ matches, logos }: { matches: Match[], logos: Record<string, string> }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const pastMatches = matches
     .filter(m => m.status === 'Завершен' && (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток'))
@@ -957,7 +1018,7 @@ const PastMatchesList = ({ matches }: { matches: Match[] }) => {
               >
                 <ChevronDown className="w-6 h-6 text-white" />
               </motion.div>
-              <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest italic">Прошедшие матчи</h3>
+              <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest">Прошедшие матчи</h3>
             </motion.div>
           </div>
         </div>
@@ -971,7 +1032,7 @@ const PastMatchesList = ({ matches }: { matches: Match[] }) => {
               className="glass-card rounded-[32px] border border-white/20 overflow-hidden divide-y divide-white/10"
             >
               {pastMatches.map(match => (
-                <MatchRow key={match.id} match={match} />
+                <MatchRow key={match.id} match={match} logos={logos} />
               ))}
             </motion.div>
           )}
@@ -1121,37 +1182,11 @@ export default function App() {
     const fetchData = async () => {
       try {
         // Fetch Matches
-        const matchesResponse = await fetch(MATCHES_SHEET_URL);
-        const matchesCsv = await matchesResponse.text();
-        
-        // Fetch Players (if URL exists)
-        let playersData: Player[] = [];
-        if (PLAYERS_SHEET_URL) {
-          const playersResponse = await fetch(PLAYERS_SHEET_URL);
-          const playersCsv = await playersResponse.text();
-          const parsedPlayers = Papa.parse(playersCsv, { header: true, skipEmptyLines: true });
-          playersData = (parsedPlayers.data as any[]).map((row, idx) => ({
-            id: idx,
-            number: row['номер'] || '',
-            name: row['имя'] || 'Без имени',
-            position: row['позиция'] || 'защ',
-            goals: parseInt(row['голы']) || 0,
-            photoUrl: row['фото'] || `https://picsum.photos/seed/${row['имя'] || idx}/200`
-          }));
-        } else {
-          // Fallback static data if URL is not provided yet
-          playersData = [
-            { id: 1, number: '1', name: 'Иванов Иван', position: 'Вратарь', goals: 5, photoUrl: 'https://picsum.photos/seed/ivan/200' },
-            { id: 2, number: '2', name: 'Петров Петр', position: 'Защитник', goals: 2, photoUrl: 'https://picsum.photos/seed/petr/200' },
-            { id: 3, number: '3', name: 'Сидоров Сидор', position: 'Полузащитник', goals: 4, photoUrl: 'https://picsum.photos/seed/sidor/200' },
-            { id: 4, number: '4', name: 'Алексеев Алексей', position: 'Нападающий', goals: 12, photoUrl: 'https://picsum.photos/seed/alex/200' }
-          ];
-        }
-
-        Papa.parse(matchesCsv, {
+        Papa.parse(MATCHES_SHEET_URL, {
+          download: true,
           header: true,
           skipEmptyLines: true,
-          complete: (results) => {
+          complete: async (results) => {
             const matches: Match[] = results.data.map((row: any) => {
               const homeScore = row['Счет_Х'] !== '' && row['Счет_Х'] !== undefined ? parseInt(row['Счет_Х']) : undefined;
               const awayScore = row['Счет_Г'] !== '' && row['Счет_Г'] !== undefined ? parseInt(row['Счет_Г']) : undefined;
@@ -1173,6 +1208,72 @@ export default function App() {
                 weather: row['Погода']
               };
             });
+
+            // Fetch Players (if URL exists)
+            let playersData: Player[] = [];
+            if (PLAYERS_SHEET_URL) {
+              try {
+                await new Promise<void>((resolve) => {
+                  Papa.parse(PLAYERS_SHEET_URL, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (playerResults) => {
+                      playersData = (playerResults.data as any[]).map((row, idx) => ({
+                        id: idx,
+                        number: row['номер'] || '',
+                        name: row['имя'] || 'Без имени',
+                        position: row['позиция'] || 'защ',
+                        goals: parseInt(row['голы']) || 0,
+                        photoUrl: row['фото'] || `https://picsum.photos/seed/${row['имя'] || idx}/200`
+                      }));
+                      resolve();
+                    },
+                    error: (err) => {
+                      console.error('PapaParse error fetching players:', err);
+                      resolve();
+                    }
+                  });
+                });
+              } catch (e) {
+                console.error('Error fetching players:', e);
+              }
+            }
+            
+            if (playersData.length === 0) {
+              playersData = [
+                { id: 1, number: '1', name: 'Иванов Иван', position: 'Вратарь', goals: 5, photoUrl: 'https://picsum.photos/seed/ivan/200' },
+                { id: 2, number: '2', name: 'Петров Петр', position: 'Защитник', goals: 2, photoUrl: 'https://picsum.photos/seed/petr/200' },
+                { id: 3, number: '3', name: 'Сидоров Сидор', position: 'Полузащитник', goals: 4, photoUrl: 'https://picsum.photos/seed/sidor/200' },
+                { id: 4, number: '4', name: 'Алексеев Алексей', position: 'Нападающий', goals: 12, photoUrl: 'https://picsum.photos/seed/alex/200' }
+              ];
+            }
+
+            // Fetch Logos
+            let logos: Record<string, string> = {};
+            try {
+              await new Promise<void>((resolve) => {
+                Papa.parse(LOGOS_SHEET_URL, {
+                  download: true,
+                  header: true,
+                  skipEmptyLines: true,
+                  complete: (logoResults) => {
+                    (logoResults.data as any[]).forEach(row => {
+                      if (row['Команда'] && row['Логотип']) {
+                        logos[row['Команда']] = row['Логотип'];
+                      }
+                    });
+                    resolve();
+                  },
+                  error: (err) => {
+                    console.error('PapaParse error fetching logos:', err);
+                    resolve();
+                  }
+                });
+              });
+            } catch (e) {
+              console.error('Error in logos fetch promise:', e);
+            }
 
             // Calculate Table
             const calculateTable = (matchList: Match[]) => {
@@ -1250,22 +1351,27 @@ export default function App() {
             }
 
             const table = currentTable;
-            const dinamoRow = table.find(t => t.teamName === 'Динамо-Владивосток');
-            const nextMatch = matches.find(m => m.status === 'Ожидается' && (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток')) || null;
-            const upcomingMatches = matches.filter(m => m.status === 'Ожидается').sort((a, b) => a.id - b.id).slice(0, 5);
+            const isOurTeam = (name: string) => {
+              const lower = name.toLowerCase();
+              return lower.includes('динамо') && !lower.includes('академия');
+            };
 
+            const dinamoRow = table.find(t => isOurTeam(t.teamName));
+            const nextMatch = matches.find(m => m.status === 'Ожидается' && (isOurTeam(m.homeTeam) || isOurTeam(m.awayTeam))) || null;
+            
             setData({
               table,
               allMatches: matches,
-              dinamoMatches: matches.filter(m => m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток'),
-              recentMatches: [], // Removed
+              dinamoMatches: matches.filter(m => isOurTeam(m.homeTeam) || isOurTeam(m.awayTeam)),
+              recentMatches: [],
               nextMatch,
               dinamoStats: {
                 rank: dinamoRow?.rank || 0,
                 points: dinamoRow?.points || 0,
                 lastResults: dinamoRow?.lastGames || []
               },
-              dinamoPlayers: playersData
+              dinamoPlayers: playersData,
+              logos
             });
             setLoading(false);
           }
@@ -1304,23 +1410,26 @@ export default function App() {
         <DinamoSpecialCard 
           stats={data.dinamoStats} 
           players={data.dinamoPlayers} 
+          logos={data.logos}
         />
 
         <NextMatchCard 
           match={data.nextMatch} 
           table={data.table}
+          logos={data.logos}
         />
         
         <main className="flex-1 max-w-7xl mx-auto w-full">
-          <TournamentTable data={data.table} />
+          <TournamentTable data={data.table} logos={data.logos} />
           
           <MatchList 
             title="Предстоящие матчи" 
             icon={Calendar} 
             matches={data.allMatches} 
+            logos={data.logos}
           />
 
-          <PastMatchesList matches={data.allMatches} />
+          <PastMatchesList matches={data.allMatches} logos={data.logos} />
 
           <FarEastMap />
         </main>

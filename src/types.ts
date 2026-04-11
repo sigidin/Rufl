@@ -58,4 +58,5 @@ export interface TournamentData {
     lastResults: ('W' | 'D' | 'L')[];
   };
   dinamoPlayers: Player[];
+  logos: Record<string, string>;
 }

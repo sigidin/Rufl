@@ -100,5 +100,6 @@ export const MOCK_DATA: TournamentData = {
     { id: 2, number: '2', name: 'Петров Петр', position: 'Защитник', goals: 2 },
     { id: 3, number: '3', name: 'Сидоров Сидор', position: 'Полузащитник', goals: 4 },
     { id: 4, number: '4', name: 'Алексеев Алексей', position: 'Нападающий', goals: 12 }
-  ]
+  ],
+  logos: {}
 };
