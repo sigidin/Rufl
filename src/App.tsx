@@ -146,7 +146,7 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
         viewport={{ once: true }}
         className="max-w-3xl mx-auto"
       >
-        <SectionTitle title="Ближайший матч" icon={Calendar} />
+        <SectionTitle title="Ближайший матч" imageSrc="https://i.ibb.co/rG2KtyCN/vs.png" />
 
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
@@ -197,9 +197,9 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
+                  className="w-28 h-28 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.homeTeam} logos={logos} size="w-16 h-16" />
+                  <TeamLogo name={match.homeTeam} logos={logos} size="w-20 h-20" />
                 </motion.div>
                 <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.homeTeam}
@@ -211,19 +211,25 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
 
               <div className="flex flex-col items-center justify-center">
                 <motion.div 
-                  whileHover={{ scale: 1.2, textShadow: "0 0 20px rgba(0, 240, 255, 0.8)" }}
-                  className="text-5xl font-black text-white tracking-tighter italic transition-all cursor-default select-none"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all cursor-pointer select-none"
                 >
-                  VS
+                  <img 
+                    src="https://i.ibb.co/rG2KtyCN/vs.png" 
+                    alt="VS" 
+                    className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]"
+                  />
                 </motion.div>
               </div>
 
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: -5 }}
-                  className="w-24 h-24 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
+                  className="w-28 h-28 bg-navy/80 rounded-full flex items-center justify-center mb-4 shadow-xl border border-bright-blue/30 neon-glow p-2"
                 >
-                  <TeamLogo name={match.awayTeam} logos={logos} size="w-16 h-16" />
+                  <TeamLogo name={match.awayTeam} logos={logos} size="w-20 h-20" />
                 </motion.div>
                 <div className="text-strong text-sm text-center leading-tight mb-3 min-h-[40px] flex items-center justify-center">
                   {match.awayTeam}
@@ -360,9 +366,14 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
             <div className="flex flex-col items-center text-center relative z-10">
               <motion.div 
                 layout
-                className="w-28 h-28 gradient-bg rounded-full flex items-center justify-center shadow-2xl mb-4 border-4 border-bright-blue/20 neon-glow p-4"
+                className="w-32 h-32 flex items-center justify-center mb-4 relative"
               >
-                <TeamLogo name="Динамо" logos={logos} size="w-full h-full" scale="w-[270%] h-[270%]" />
+                <div className="absolute inset-0 bg-bright-blue/20 rounded-full blur-2xl animate-pulse" />
+                <img 
+                  src="https://i.ibb.co/23dNhY8B/dinamo.png" 
+                  alt="Динамо" 
+                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]"
+                />
               </motion.div>
               
               <div className="flex flex-col items-center mb-4">
@@ -418,9 +429,7 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-bright-blue/20 flex items-center justify-center border border-bright-blue/40">
-                        <img src="/icons/roster.png" alt="Состав" className="w-8 h-8 object-contain" />
-                      </div>
+                      <img src="https://i.ibb.co/pvyHFwVY/dinamo.png" alt="Состав" className="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" />
                       <h3 className="text-xl text-strong text-white italic">Состав команды</h3>
                     </div>
                     <div className="flex gap-3">
@@ -523,17 +532,21 @@ const SectionTitle = ({ title, icon: Icon, imageSrc }: { title: string; icon?: a
   >
     <motion.div 
       whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95, rotate: 5 }}
       className="bg-navy/60 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-4 border border-bright-blue/30 shadow-[0_0_20px_rgba(0,240,255,0.15)] cyber-border"
     >
       <motion.div 
-        whileHover={{ rotate: imageSrc ? 0 : 180 }}
-        transition={{ duration: 0.5 }}
-        className="p-2.5 gradient-bg rounded-xl shadow-lg flex items-center justify-center"
+        whileHover={{ rotate: 360 }}
+        whileTap={{ rotate: -360 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        className="flex items-center justify-center p-1"
       >
         {imageSrc ? (
-          <img src={imageSrc} alt={title} className="w-8 h-8 object-contain" />
+          <img src={imageSrc} alt={title} className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" />
         ) : (
-          <Icon className="w-6 h-6 text-white" />
+          <div className="p-2.5 gradient-bg rounded-xl shadow-lg">
+            <Icon className="w-6 h-6 text-white" />
+          </div>
         )}
       </motion.div>
       <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest">{title}</h3>
@@ -544,7 +557,7 @@ const SectionTitle = ({ title, icon: Icon, imageSrc }: { title: string; icon?: a
 const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<string, string> }) => (
   <section className="py-10">
     <div className="max-w-4xl mx-auto">
-      <SectionTitle title="Турнирная таблица" icon={Trophy} imageSrc="/icons/table.png" />
+      <SectionTitle title="Турнирная таблица" icon={Trophy} imageSrc="https://i.ibb.co/3555XG36/table.png" />
       <div className="px-1 md:px-2">
         <div className="glass-card rounded-2xl shadow-2xl border border-bright-blue/20 overflow-hidden cyber-border">
           <div className="overflow-x-auto scrollbar-hide">
@@ -565,7 +578,7 @@ const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<stri
             </thead>
             <tbody className="divide-y divide-bright-blue/10">
               {data.map((row) => {
-                const isDinamo = row.teamName.toLowerCase().includes('динамо');
+                const isDinamo = row.teamName.toLowerCase().includes('динамо') && !row.teamName.toLowerCase().includes('академия');
                 const teamParts = row.teamName.split(/[\s-]/);
                 return (
                   <motion.tr 
@@ -617,11 +630,14 @@ const TeamLogo = ({ name, logos, size = "w-6 h-6", scale = "w-[130%] h-[130%]" }
 
   // Local icons mapping
   const localLogos: Record<string, string> = {
-    'динамо': '/icons/dinamo.png',
-    'искра': '/icons/iskra.png',
-    'сшор': '/icons/sshor1.png',
-    'рекорд': '/icons/rekord.png',
-    'благовещенск': '/icons/blagoveshchensk.png'
+    'академия': 'https://i.ibb.co/wNNvSf3f/academy.png',
+    'динамо': 'https://i.ibb.co/pvyHFwVY/dinamo.png',
+    'искра': 'https://i.ibb.co/xt8CK8Zk/iskra.png',
+    'сшор': 'https://i.ibb.co/zTBmwf60/sshor1.png',
+    'рекорд': 'https://i.ibb.co/0yf27V5r/rekord.png',
+    'благовещенск': 'https://i.ibb.co/fYzrJgBq/blagoveshchensk.png',
+    'ска': 'https://i.ibb.co/WWdR0gQX/ska.png',
+    'сахалин': 'https://i.ibb.co/4wY4SP2z/sakhalin.png'
   };
 
   const getLocalLogo = () => {
@@ -715,8 +731,7 @@ const FarEastMap = () => {
   }, []);
 
   return (
-    <div className="px-0 py-10 max-w-4xl mx-auto relative">
-      <SectionTitle title="География турнира" icon={MapPin} imageSrc="/icons/stats.png" />
+    <div className="px-0 pt-0 pb-10 max-w-4xl mx-auto relative">
       <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
         <img 
           src="https://files.catbox.moe/ya1luu.png" 
@@ -725,7 +740,7 @@ const FarEastMap = () => {
           referrerPolicy="no-referrer"
         />
         
-        {/* Visitor Stats Overlay */}
+        {/* Visitor Stats Overlay - Reverted to original inside position */}
         <div className="absolute bottom-4 left-4 right-4 glass-card border border-white/20 backdrop-blur-xl rounded-2xl p-4 shadow-2xl overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
           <div className="flex justify-center gap-8 relative z-10">
@@ -879,21 +894,21 @@ const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> 
       
       <div className="flex items-center justify-between gap-4 mb-6 relative">
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
-            <TeamLogo name={match.homeTeam} logos={logos} size="w-10 h-10" />
+          <div className="w-16 h-16 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
+            <TeamLogo name={match.homeTeam} logos={logos} size="w-12 h-12" />
           </div>
           <div className="text-strong text-white w-full text-center leading-tight">
             {formatTeamName(match.homeTeam)}
           </div>
         </div>
         
-        <div className="flex flex-col items-center justify-center h-14">
+        <div className="flex flex-col items-center justify-center h-16">
           <span className="text-[10px] font-black text-white/10">VS</span>
         </div>
-
+ 
         <div className="flex flex-col items-center flex-1 overflow-hidden">
-          <div className="w-14 h-14 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
-            <TeamLogo name={match.awayTeam} logos={logos} size="w-10 h-10" />
+          <div className="w-16 h-16 bg-navy rounded-full flex items-center justify-center shadow-lg mb-2 border border-white/5 neon-glow p-1">
+            <TeamLogo name={match.awayTeam} logos={logos} size="w-12 h-12" />
           </div>
           <div className="text-strong text-white w-full text-center leading-tight">
             {formatTeamName(match.awayTeam)}
@@ -962,10 +977,10 @@ const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: s
 
   // Map section titles to local icons
   const sectionIcons: Record<string, string> = {
-    "Предстоящие матчи": "/icons/calendar.png",
-    "Турнирная таблица": "/icons/table.png",
-    "Состав команды": "/icons/roster.png",
-    "География турнира": "/icons/stats.png"
+    "Предстоящие матчи": "https://i.ibb.co/CsBkhQX9/calendar.png",
+    "Турнирная таблица": "https://i.ibb.co/3555XG36/table.png",
+    "Состав команды": "https://i.ibb.co/23dNhY8B/dinamo.png",
+    "География турнира": "https://i.ibb.co/bMYHDSBf/stats.png"
   };
 
   return (
@@ -1089,10 +1104,11 @@ const AppFooter = () => {
             whileHover={{ y: -5 }}
             className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
           >
+            <img src="https://i.ibb.co/Cy41rJD/app.png" alt="App" className="w-16 h-16 object-contain mb-4 drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]" />
             <div className="flex flex-col items-center">
               <h3 className="text-sm text-strong text-white mb-1">Приложение на главном экране</h3>
               <p className="text-[10px] font-medium text-white/60 mb-4 leading-relaxed">
-                Установите РЮФЛ-2026 как приложение для быстрого доступа к результатам
+                Установите ДИНАМО-12 как приложение для быстрого доступа к статистике и результатам
               </p>
             </div>
             <motion.button 
@@ -1111,9 +1127,10 @@ const AppFooter = () => {
             whileHover={{ y: -5 }}
             className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
           >
+            <img src="https://i.ibb.co/NkHkTxr/support.png" alt="Support" className="w-16 h-16 object-contain mb-4 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
             <h3 className="text-sm text-strong text-white mb-1">Поддержать проект</h3>
             <p className="text-[10px] font-medium text-white/60 mb-4 leading-relaxed">
-              Ваша поддержка помогает развивать приложение и обновлять данные
+              Ваша благодарность и поддержка помогают развивать приложение и обновлять статистические данные
             </p>
             <div className="flex items-center gap-4 w-full">
               <motion.button 
@@ -1251,28 +1268,32 @@ export default function App() {
 
             // Fetch Logos
             let logos: Record<string, string> = {};
-            try {
-              await new Promise<void>((resolve) => {
-                Papa.parse(LOGOS_SHEET_URL, {
-                  download: true,
-                  header: true,
-                  skipEmptyLines: true,
-                  complete: (logoResults) => {
-                    (logoResults.data as any[]).forEach(row => {
-                      if (row['Команда'] && row['Логотип']) {
-                        logos[row['Команда']] = row['Логотип'];
-                      }
-                    });
-                    resolve();
-                  },
-                  error: (err) => {
-                    console.error('PapaParse error fetching logos:', err);
-                    resolve();
-                  }
+            if (LOGOS_SHEET_URL && LOGOS_SHEET_URL.includes('pub?')) {
+              try {
+                await new Promise<void>((resolve) => {
+                  Papa.parse(LOGOS_SHEET_URL, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (logoResults) => {
+                      (logoResults.data as any[]).forEach(row => {
+                        if (row['Команда'] && row['Логотип']) {
+                          logos[row['Команда']] = row['Логотип'];
+                        }
+                      });
+                      resolve();
+                    },
+                    error: (err) => {
+                      // err can be a ProgressEvent if it's a network error
+                      const errorMsg = err instanceof Error ? err.message : (typeof err === 'object' ? 'Network or CORS error' : String(err));
+                      console.warn('PapaParse could not fetch logos from sheet:', errorMsg);
+                      resolve();
+                    }
+                  });
                 });
-              });
-            } catch (e) {
-              console.error('Error in logos fetch promise:', e);
+              } catch (e) {
+                console.error('Error in logos fetch promise:', e);
+              }
             }
 
             // Calculate Table
