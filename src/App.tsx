@@ -66,6 +66,28 @@ const formatDate = (dateStr: string) => {
 
 const Header = () => {
   const [clicks, setClicks] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const controlHeader = () => {
+      if (typeof window !== 'undefined') {
+        if (window.scrollY > lastScrollY && window.scrollY > 100) {
+          // scrolling down
+          setIsVisible(false);
+        } else {
+          // scrolling up
+          setIsVisible(true);
+        }
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    window.addEventListener('scroll', controlHeader);
+    return () => {
+      window.removeEventListener('scroll', controlHeader);
+    };
+  }, [lastScrollY]);
 
   const handleEasterEgg = () => {
     const newClicks = clicks + 1;
@@ -82,7 +104,12 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl">
+    <motion.header 
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : -150 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-bright-blue/30 backdrop-blur-xl"
+    >
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-bright-blue/5 via-transparent to-neon-pink/5 pointer-events-none" />
         <div className="flex flex-col items-center">
@@ -98,7 +125,7 @@ const Header = () => {
           Региональная юношеская футбольная лига | Дальний Восток
         </p>
       </div>
-    </header>
+    </motion.header>
   );
 };
 
@@ -216,12 +243,25 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
                 </div>
               </div>
 
-              <div className="flex flex-col items-center justify-center h-28">
+              <div className="flex flex-col items-center justify-center h-28 relative">
+                <motion.div 
+                  animate={{ 
+                    scale: [1, 1.1, 1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.4, 0.7, 0.3]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    times: [0, 0.1, 0.2, 0.4, 1],
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-bright-blue/20 rounded-full blur-xl" 
+                />
                 <motion.div 
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all cursor-pointer select-none"
+                  className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all cursor-pointer select-none relative z-10"
                 >
                   <img 
                     src="https://i.ibb.co/rG2KtyCN/vs.png" 
@@ -373,7 +413,7 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
             <div className="flex flex-col items-center text-center relative z-10">
               <motion.div 
                 layout
-                className="w-32 h-32 flex items-center justify-center mb-4 relative"
+                className="w-40 h-40 flex items-center justify-center mb-4 relative"
               >
                 <motion.div 
                   animate={{ 
@@ -386,12 +426,12 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
                     times: [0, 0.1, 0.2, 0.4, 1],
                     ease: "easeInOut"
                   }}
-                  className="absolute inset-0 bg-bright-blue/20 rounded-full blur-2xl" 
+                  className="absolute inset-0 bg-bright-blue/20 rounded-full blur-3xl" 
                 />
                 <img 
                   src="https://i.ibb.co/pvyHFwVY/dinamo.png" 
                   alt="Динамо" 
-                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]"
+                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]"
                 />
               </motion.div>
               
@@ -604,9 +644,8 @@ const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<stri
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    whileHover={{ backgroundColor: "rgba(0, 240, 255, 0.05)" }}
                     key={row.teamName} 
-                    className={`${isDinamoRow ? 'bg-bright-blue/10' : ''} transition-colors`}
+                    className={`${isDinamoRow ? 'bg-bright-blue/10' : ''} transition-colors hover:bg-bright-blue/5`}
                   >
                     <td className="px-1.5 py-4 text-center">
                       <span className={`font-black ${isDinamoRow ? 'text-bright-blue text-sm' : row.rank <= 3 ? 'text-green-400 text-sm' : 'text-white/80'}`}>{row.rank}</span>
@@ -753,7 +792,7 @@ const FarEastMap = () => {
     <div className="px-4 py-12 max-w-4xl mx-auto relative">
       <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
         <img 
-          src="https://files.catbox.moe/ya1luu.png" 
+          src="https://i.ibb.co/7xJcHVQP/map.png" 
           alt="География турнира" 
           className="w-full h-auto object-cover"
           referrerPolicy="no-referrer"
@@ -1086,11 +1125,12 @@ const PastMatchesList = ({ matches, logos }: { matches: Match[], logos: Record<s
                     key={match.id}
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
                     transition={{ delay: idx * 0.1 }}
                     className="relative"
                   >
                     {/* Timeline Dot */}
-                    <div className={`absolute -left-[25px] md:-left-[33px] top-6 w-4 h-4 rounded-full bg-navy border-2 z-10 ${dotColors[result]}`} />
+                    <div className={`absolute -left-[25px] md:-left-[33px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-navy border-2 z-10 ${dotColors[result]}`} />
                     
                     <div className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:border-bright-blue/30 transition-all">
                       <MatchRow match={match} logos={logos} />
@@ -1139,10 +1179,10 @@ const WeatherWidget = ({ city }: { city: string }) => {
 const DownloadsSection = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const items = [
-    { title: 'Обои для ПК #1', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000', size: '4.2 MB', downloads: '1.2k' },
-    { title: 'Обои для Смартфона', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000', size: '2.8 MB', downloads: '850' },
-    { title: 'Гимн Динамо', type: 'Audio', url: '#', size: '5.1 MB', downloads: '420' },
-    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', downloads: '2.1k' }
+    { title: 'Обои для ПК #1', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000', size: '4.2 MB', downloads: '0' },
+    { title: 'Обои для Смартфона', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000', size: '2.8 MB', downloads: '0' },
+    { title: 'Гимн Динамо', type: 'Audio', url: '#', size: '5.1 MB', downloads: '0' },
+    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', downloads: '0' }
   ];
 
   return (
@@ -1439,8 +1479,7 @@ export default function App() {
                       resolve();
                     },
                     error: (err) => {
-                      // err can be a ProgressEvent if it's a network error
-                      const errorMsg = err instanceof Error ? err.message : (typeof err === 'object' ? 'Network or CORS error' : String(err));
+                      const errorMsg = err instanceof Error ? err.message : (err && typeof err === 'object' && 'type' in err ? `Network error (${(err as any).type})` : 'Unknown error');
                       console.warn('PapaParse could not fetch logos from sheet:', errorMsg);
                       resolve();
                     }
