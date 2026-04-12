@@ -21,6 +21,15 @@ body {
   color: #F8FAFC;
   font-family: var(--font-sans);
   min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+img {
+  pointer-events: none;
+  -webkit-touch-callout: none;
 }
 
 /* Background with Cyber Overlay */

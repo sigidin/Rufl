@@ -46,6 +46,11 @@ const LOGOS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZ
 import { db, startPresence, incrementMonthlyVisitors, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 
+const isOurTeam = (name: string) => {
+  const lower = name.toLowerCase();
+  return lower.includes('динамо') && !lower.includes('академия');
+};
+
 const formatDate = (dateStr: string) => {
   try {
     const [day, month] = dateStr.split('.').map(Number);
@@ -104,7 +109,7 @@ const ResultCircle = ({ result }: { result: 'W' | 'D' | 'L', key?: React.Key }) 
     L: 'bg-red-500'
   };
   return (
-    <div className={`w-3 h-3 rounded-full ${colors[result]}`} title={result === 'W' ? 'Победа' : result === 'D' ? 'Ничья' : 'Поражение'} />
+    <div className={`w-2.5 h-2.5 rounded-full ${colors[result]}`} title={result === 'W' ? 'Победа' : result === 'D' ? 'Ничья' : 'Поражение'} />
   );
 };
 
@@ -185,15 +190,17 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
                   {copied && <Check className="w-3 h-3 text-green-400" />}
                 </button>
               </div>
-              {match.weather && (
+              {match.weather ? (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em] mt-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-pulse" />
                   Погода: {match.weather}
                 </div>
+              ) : (
+                <WeatherWidget city={match.location.split(',')[0]} />
               )}
             </div>
 
-            <div className="flex items-center justify-center gap-4 md:gap-12 mb-10">
+            <div className="flex items-start justify-center gap-4 md:gap-12 mb-10">
               <div className="flex flex-col items-center flex-1">
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
@@ -209,7 +216,7 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
                 </div>
               </div>
 
-              <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center h-28">
                 <motion.div 
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -340,7 +347,7 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
   const groupedPlayers = getGroupedPlayers();
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-12">
       <div className="max-w-3xl mx-auto">
         <motion.div 
           layout
@@ -368,9 +375,21 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
                 layout
                 className="w-32 h-32 flex items-center justify-center mb-4 relative"
               >
-                <div className="absolute inset-0 bg-bright-blue/20 rounded-full blur-2xl animate-pulse" />
+                <motion.div 
+                  animate={{ 
+                    scale: [1, 1.15, 1, 1.3, 1],
+                    opacity: [0.2, 0.5, 0.3, 0.6, 0.2]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    times: [0, 0.1, 0.2, 0.4, 1],
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-bright-blue/20 rounded-full blur-2xl" 
+                />
                 <img 
-                  src="https://i.ibb.co/23dNhY8B/dinamo.png" 
+                  src="https://i.ibb.co/pvyHFwVY/dinamo.png" 
                   alt="Динамо" 
                   className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]"
                 />
@@ -555,7 +574,7 @@ const SectionTitle = ({ title, icon: Icon, imageSrc }: { title: string; icon?: a
 );
 
 const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<string, string> }) => (
-  <section className="py-10">
+  <section className="px-4 py-12">
     <div className="max-w-4xl mx-auto">
       <SectionTitle title="Турнирная таблица" icon={Trophy} imageSrc="https://i.ibb.co/3555XG36/table.png" />
       <div className="px-1 md:px-2">
@@ -578,7 +597,7 @@ const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<stri
             </thead>
             <tbody className="divide-y divide-bright-blue/10">
               {data.map((row) => {
-                const isDinamo = row.teamName.toLowerCase().includes('динамо') && !row.teamName.toLowerCase().includes('академия');
+                const isDinamoRow = isOurTeam(row.teamName);
                 const teamParts = row.teamName.split(/[\s-]/);
                 return (
                   <motion.tr 
@@ -587,16 +606,16 @@ const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<stri
                     viewport={{ once: true }}
                     whileHover={{ backgroundColor: "rgba(0, 240, 255, 0.05)" }}
                     key={row.teamName} 
-                    className={`${isDinamo ? 'bg-bright-blue/10' : ''} transition-colors`}
+                    className={`${isDinamoRow ? 'bg-bright-blue/10' : ''} transition-colors`}
                   >
                     <td className="px-1.5 py-4 text-center">
-                      <span className={`font-black ${isDinamo ? 'text-bright-blue text-sm' : row.rank <= 3 ? 'text-green-400 text-sm' : 'text-white/80'}`}>{row.rank}</span>
+                      <span className={`font-black ${isDinamoRow ? 'text-bright-blue text-sm' : row.rank <= 3 ? 'text-green-400 text-sm' : 'text-white/80'}`}>{row.rank}</span>
                     </td>
                     <td className="px-2 py-4 font-bold text-white">
                       <div className="flex items-center gap-1.5 md:gap-2">
                         <TeamLogo name={row.teamName} logos={logos} size="w-7 h-7" />
                         <div className="flex flex-col leading-tight">
-                          <span className={`${isDinamo ? 'text-bright-blue' : ''} uppercase text-[10px] md:text-sm`}>{teamParts[0]}</span>
+                          <span className={`${isDinamoRow ? 'text-bright-blue' : ''} uppercase text-[10px] md:text-sm`}>{teamParts[0]}</span>
                           {teamParts.length > 1 && <span className="text-[9px] opacity-50 font-medium">{teamParts.slice(1).join(' ')}</span>}
                         </div>
                       </div>
@@ -625,7 +644,7 @@ const TournamentTable = ({ data, logos }: { data: TableRow[], logos: Record<stri
 </section>
 );
 
-const TeamLogo = ({ name, logos, size = "w-6 h-6", scale = "w-[130%] h-[130%]" }: { name: string, logos: Record<string, string>, size?: string, scale?: string }) => {
+const TeamLogo = ({ name, logos, size = "w-6 h-6", scale = "w-[110%] h-[110%]" }: { name: string, logos: Record<string, string>, size?: string, scale?: string }) => {
   const logoUrl = logos ? logos[name] : undefined;
 
   // Local icons mapping
@@ -731,7 +750,7 @@ const FarEastMap = () => {
   }, []);
 
   return (
-    <div className="px-0 pt-0 pb-10 max-w-4xl mx-auto relative">
+    <div className="px-4 py-12 max-w-4xl mx-auto relative">
       <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
         <img 
           src="https://files.catbox.moe/ya1luu.png" 
@@ -774,21 +793,15 @@ const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ m
     <div className="border-b border-white/5 last:border-0">
       <div className="p-5 transition-colors hover:bg-white/5">
         <div className="mb-4">
-          {/* Line 1: Date */}
-          <div className="flex items-center gap-3 mb-2">
-            <span className="bg-bright-blue/10 text-bright-blue text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">{dayOfWeek}</span>
-            <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">{formatDate(match.date)}</span>
-          </div>
-          
-          {/* Line 2: Location + Icons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[11px] font-black text-bright-blue uppercase tracking-widest italic">
-              <MapPin className="w-3 h-3" />
-              {match.location}
+          {/* Header Line: Date, Media, Location */}
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <div className="flex items-center gap-3">
+              <span className="bg-bright-blue/10 text-bright-blue text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">{dayOfWeek}</span>
+              <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">{formatDate(match.date)}</span>
             </div>
-            
+
+            {/* Media Icons in the middle */}
             <div className="flex items-center gap-4">
-              {/* Video Icon */}
               {match.broadcastUrl ? (
                 <a 
                   href={match.broadcastUrl}
@@ -797,13 +810,12 @@ const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ m
                   className="text-bright-blue hover:scale-125 transition-transform neon-glow p-1 rounded-md"
                   title="Трансляция"
                 >
-                  <Video className="w-4.5 h-4.5" />
+                  <Video className="w-4 h-4" />
                 </a>
               ) : (
-                <Video className="w-4.5 h-4.5 text-white/10" />
+                <Video className="w-4 h-4 text-white/10" />
               )}
 
-              {/* Photo Icon */}
               {match.photoUrl ? (
                 <a 
                   href={match.photoUrl}
@@ -812,11 +824,16 @@ const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ m
                   className="text-bright-blue hover:scale-125 transition-transform neon-glow p-1 rounded-md"
                   title="Фото"
                 >
-                  <ImageIcon className="w-4.5 h-4.5" />
+                  <ImageIcon className="w-4 h-4" />
                 </a>
               ) : (
-                <ImageIcon className="w-4.5 h-4.5 text-white/10" />
+                <ImageIcon className="w-4 h-4 text-white/10" />
               )}
+            </div>
+
+            <div className="flex items-center gap-2 text-[10px] font-black text-bright-blue/60 uppercase tracking-widest italic">
+              <MapPin className="w-3 h-3" />
+              {match.location.split(',')[0]}
             </div>
           </div>
         </div>
@@ -825,7 +842,7 @@ const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ m
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <TeamLogo name={match.homeTeam} logos={logos} size="w-7 h-7" />
-              <span className={`text-base ${match.homeTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
+              <span className={`text-base ${isOurTeam(match.homeTeam) ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.homeTeam}
               </span>
             </div>
@@ -834,7 +851,7 @@ const MatchRow: React.FC<{ match: Match, logos: Record<string, string> }> = ({ m
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <TeamLogo name={match.awayTeam} logos={logos} size="w-7 h-7" />
-              <span className={`text-base ${match.awayTeam === 'Динамо-Владивосток' ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
+              <span className={`text-base ${isOurTeam(match.awayTeam) ? 'font-black text-bright-blue italic' : 'font-bold text-white/80'}`}>
                 {match.awayTeam}
               </span>
             </div>
@@ -956,14 +973,14 @@ const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> 
 const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: string, icon: any, logos: Record<string, string> }) => {
   const isUpcoming = title === "Предстоящие матчи";
   
-  const isOurTeam = (name: string) => {
+  const isOurTeamLocal = (name: string) => {
     const lower = name.toLowerCase();
     return lower.includes('динамо') && !lower.includes('академия');
   };
 
   // Filter matches for Dinamo Vladivostok if it's the upcoming section
   const filteredMatches = isUpcoming 
-    ? matches.filter(m => (isOurTeam(m.homeTeam) || isOurTeam(m.awayTeam)) && m.status === 'Ожидается')
+    ? matches.filter(m => (isOurTeamLocal(m.homeTeam) || isOurTeamLocal(m.awayTeam)) && m.status === 'Ожидается')
     : matches;
 
   // Sort upcoming matches by date
@@ -984,7 +1001,7 @@ const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: s
   };
 
   return (
-    <div className="px-4 py-10">
+    <div className="px-4 py-12">
       <SectionTitle title={title} icon={icon} imageSrc={sectionIcons[title]} />
       {isUpcoming ? (
         <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-4">
@@ -1010,13 +1027,17 @@ const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: s
 const PastMatchesList = ({ matches, logos }: { matches: Match[], logos: Record<string, string> }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const pastMatches = matches
-    .filter(m => m.status === 'Завершен' && (m.homeTeam === 'Динамо-Владивосток' || m.awayTeam === 'Динамо-Владивосток'))
-    .sort((a, b) => b.id - a.id);
+    .filter(m => m.status === 'Завершен' && (isOurTeam(m.homeTeam) || isOurTeam(m.awayTeam)))
+    .sort((a, b) => {
+      const dateA = new Date(a.date.split('.').reverse().join('-')).getTime();
+      const dateB = new Date(b.date.split('.').reverse().join('-')).getTime();
+      return dateB - dateA;
+    });
 
   if (pastMatches.length === 0) return null;
 
   return (
-    <section className="py-10">
+    <section className="py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div 
           className="cursor-pointer group"
@@ -1033,7 +1054,7 @@ const PastMatchesList = ({ matches, logos }: { matches: Match[], logos: Record<s
               >
                 <ChevronDown className="w-6 h-6 text-white" />
               </motion.div>
-              <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest">Прошедшие матчи</h3>
+              <h3 className="text-xl md:text-2xl text-strong text-white uppercase tracking-widest">История матчей</h3>
             </motion.div>
           </div>
         </div>
@@ -1044,10 +1065,134 @@ const PastMatchesList = ({ matches, logos }: { matches: Match[], logos: Record<s
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="glass-card rounded-[32px] border border-white/20 overflow-hidden divide-y divide-white/10"
+              className="relative pl-8 md:pl-12 space-y-8"
             >
-              {pastMatches.map(match => (
-                <MatchRow key={match.id} match={match} logos={logos} />
+              {/* Timeline Line */}
+              <div className="absolute left-[15px] md:left-[23px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-bright-blue via-bright-blue/20 to-transparent" />
+              
+              {pastMatches.map((match, idx) => {
+                const isHome = isOurTeam(match.homeTeam);
+                const ourScore = isHome ? match.homeScore! : match.awayScore!;
+                const oppScore = isHome ? match.awayScore! : match.homeScore!;
+                const result = ourScore > oppScore ? 'W' : ourScore === oppScore ? 'D' : 'L';
+                const dotColors = {
+                  W: 'border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]',
+                  D: 'border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]',
+                  L: 'border-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]'
+                };
+
+                return (
+                  <motion.div 
+                    key={match.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="relative"
+                  >
+                    {/* Timeline Dot */}
+                    <div className={`absolute -left-[25px] md:-left-[33px] top-6 w-4 h-4 rounded-full bg-navy border-2 z-10 ${dotColors[result]}`} />
+                    
+                    <div className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:border-bright-blue/30 transition-all">
+                      <MatchRow match={match} logos={logos} />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+};
+
+const WeatherWidget = ({ city }: { city: string }) => {
+  const [weather, setWeather] = useState<{ temp: string, icon: string } | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Using wttr.in for simple weather data
+        const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t+%c`);
+        if (response.ok) {
+          const text = await response.text();
+          const [temp, icon] = text.trim().split(' ');
+          setWeather({ temp, icon });
+        }
+      } catch (e) {
+        console.warn('Weather fetch failed', e);
+      }
+    };
+    fetchWeather();
+  }, [city]);
+
+  if (!weather) return null;
+
+  return (
+    <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em] mt-3">
+      <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-pulse" />
+      {city}: {weather.temp} {weather.icon}
+    </div>
+  );
+};
+
+const DownloadsSection = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const items = [
+    { title: 'Обои для ПК #1', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000', size: '4.2 MB', downloads: '1.2k' },
+    { title: 'Обои для Смартфона', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000', size: '2.8 MB', downloads: '850' },
+    { title: 'Гимн Динамо', type: 'Audio', url: '#', size: '5.1 MB', downloads: '420' },
+    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', downloads: '2.1k' }
+  ];
+
+  return (
+    <section className="py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div 
+          className="cursor-pointer group"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <SectionTitle title="Медиа и загрузки" icon={Download} />
+        </div>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-hidden"
+            >
+              {items.map((item, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="glass-card p-6 rounded-3xl border border-white/10 flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-bright-blue/10 flex items-center justify-center text-bright-blue group-hover:bg-bright-blue group-hover:text-navy transition-all">
+                      {item.type === 'Wallpaper' ? <ImageIcon className="w-6 h-6" /> : item.type === 'Audio' ? <Video className="w-6 h-6" /> : <Download className="w-6 h-6" />}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white uppercase tracking-wider">{item.title}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">{item.type} • {item.size}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/10" />
+                        <span className="text-[9px] font-bold text-bright-blue/60 uppercase tracking-widest flex items-center gap-1">
+                          <Download className="w-2.5 h-2.5" /> {item.downloads}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <a 
+                    href={item.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-white/5 text-white/60 hover:text-bright-blue hover:bg-bright-blue/10 transition-all"
+                  >
+                    <Download className="w-5 h-5" />
+                  </a>
+                </motion.div>
               ))}
             </motion.div>
           )}
@@ -1135,9 +1280,14 @@ const AppFooter = () => {
             <div className="flex items-center gap-4 w-full">
               <motion.button 
                 onClick={() => copyToClipboard('4276500050261351', 'sber')}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: copied === 'sber' ? "0 0 20px rgba(74, 222, 128, 0.4)" : "0 0 20px rgba(0, 240, 255, 0.4)" 
+                }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 h-12 bg-bright-blue/10 rounded-2xl border border-bright-blue/30 flex items-center justify-center relative group overflow-hidden transition-all"
+                className={`flex-1 h-12 rounded-2xl border flex items-center justify-center relative group overflow-hidden transition-all ${
+                  copied === 'sber' ? 'bg-green-500/10 border-green-500/50' : 'bg-bright-blue/10 border-bright-blue/30'
+                }`}
                 title="Скопировать номер карты Сбер"
               >
                 {copied === 'sber' ? (
@@ -1153,9 +1303,14 @@ const AppFooter = () => {
               </motion.button>
               <motion.button 
                 onClick={() => copyToClipboard('2200700717929292', 'tbank')}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: copied === 'tbank' ? "0 0 20px rgba(74, 222, 128, 0.4)" : "0 0 20px rgba(0, 240, 255, 0.4)" 
+                }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 h-12 bg-bright-blue/10 rounded-2xl border border-bright-blue/30 flex items-center justify-center relative group overflow-hidden transition-all"
+                className={`flex-1 h-12 rounded-2xl border flex items-center justify-center relative group overflow-hidden transition-all ${
+                  copied === 'tbank' ? 'bg-green-500/10 border-green-500/50' : 'bg-bright-blue/10 border-bright-blue/30'
+                }`}
                 title="Скопировать номер карты Т-Банк"
               >
                 {copied === 'tbank' ? (
@@ -1427,7 +1582,7 @@ export default function App() {
       <div className="app-background" />
       <Header />
       
-      <div className="relative z-10">
+      <div className="relative z-10 space-y-0">
         <DinamoSpecialCard 
           stats={data.dinamoStats} 
           players={data.dinamoPlayers} 
@@ -1440,7 +1595,7 @@ export default function App() {
           logos={data.logos}
         />
         
-        <main className="flex-1 max-w-7xl mx-auto w-full">
+        <main className="flex-1 max-w-7xl mx-auto w-full space-y-0">
           <TournamentTable data={data.table} logos={data.logos} />
           
           <MatchList 
@@ -1451,6 +1606,8 @@ export default function App() {
           />
 
           <PastMatchesList matches={data.allMatches} logos={data.logos} />
+
+          <DownloadsSection />
 
           <FarEastMap />
         </main>
