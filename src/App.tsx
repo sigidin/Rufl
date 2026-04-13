@@ -491,18 +491,18 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
                       <img src="https://i.ibb.co/pvyHFwVY/dinamo.png" alt="Состав" className="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" />
                       <h3 className="text-xl text-strong text-white italic">Состав команды</h3>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('name'); }}
-                        className={`text-[10px] font-black px-4 py-2.5 rounded-xl border transition-all flex items-center gap-2 uppercase tracking-widest ${sortBy === 'name' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
+                        className={`text-[8px] sm:text-[10px] font-black px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all flex items-center gap-1.5 sm:gap-2 uppercase tracking-widest ${sortBy === 'name' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
                       >
-                        <SortAsc className="w-3.5 h-3.5" /> А-Я
+                        <SortAsc className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> А-Я
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSortBy('goals'); }}
-                        className={`text-[10px] font-black px-4 py-2.5 rounded-xl border transition-all flex items-center gap-2 uppercase tracking-widest ${sortBy === 'goals' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
+                        className={`text-[8px] sm:text-[10px] font-black px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all flex items-center gap-1.5 sm:gap-2 uppercase tracking-widest ${sortBy === 'goals' ? 'bg-bright-blue text-navy border-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'}`}
                       >
-                        <Target className="w-3.5 h-3.5" /> Голы
+                        <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Голы
                       </button>
                     </div>
                   </div>
@@ -754,6 +754,8 @@ const getDayOfWeek = (dateStr: string) => {
 const FarEastMap = () => {
   const [monthlyVisitors, setMonthlyVisitors] = useState<number>(1248);
   const [onlineNow, setOnlineNow] = useState<number>(42);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     // Increment monthly visitors
@@ -788,15 +790,43 @@ const FarEastMap = () => {
     };
   }, []);
 
+  const handleDoubleTap = () => {
+    setIsZoomed(!isZoomed);
+    if (isZoomed) setPosition({ x: 0, y: 0 });
+  };
+
   return (
     <div className="px-4 py-12 max-w-4xl mx-auto relative">
-      <div className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10">
-        <img 
-          src="https://i.ibb.co/7xJcHVQP/map.png" 
-          alt="География турнира" 
-          className="w-full h-auto object-cover"
-          referrerPolicy="no-referrer"
-        />
+      <div 
+        className="w-full overflow-hidden relative rounded-3xl shadow-2xl border border-white/10 cursor-zoom-in"
+        onDoubleClick={handleDoubleTap}
+      >
+        <motion.div
+          drag={isZoomed}
+          dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
+          animate={{ 
+            scale: isZoomed ? 2.5 : 1,
+            x: position.x,
+            y: position.y
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="w-full h-full"
+        >
+          <img 
+            src="https://i.ibb.co/7xJcHVQP/map.png" 
+            alt="География турнира" 
+            className="w-full h-auto object-cover select-none"
+            referrerPolicy="no-referrer"
+            draggable={false}
+          />
+        </motion.div>
+        
+        {/* Zoom Hint */}
+        {!isZoomed && (
+          <div className="absolute top-4 right-4 bg-navy/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-[8px] font-black text-white/60 uppercase tracking-widest pointer-events-none">
+            Двойной тап для зума
+          </div>
+        )}
         
         {/* Visitor Stats Overlay - Reverted to original inside position */}
         <div className="absolute bottom-4 left-4 right-4 glass-card border border-white/20 backdrop-blur-xl rounded-2xl p-4 shadow-2xl overflow-hidden">
@@ -974,13 +1004,27 @@ const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> 
 
       <div className="flex flex-col items-center gap-3">
         <span className="text-lg font-black text-bright-blue italic">{match.time}</span>
-        <button 
-          onClick={copyAddress}
-          className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
-        >
-          <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
-          <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано' : match.location}</span>
-        </button>
+        <div className="flex flex-col items-center gap-1">
+          <button 
+            onClick={copyAddress}
+            className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
+          >
+            <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
+            <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано' : match.location}</span>
+          </button>
+          
+          {match.mapUrl && (
+            <a 
+              href={match.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[7px] font-black text-neon-pink/60 uppercase tracking-widest hover:text-neon-pink transition-colors flex items-center gap-1"
+            >
+              <ExternalLink className="w-2 h-2" />
+              Открыть в 2ГИС
+            </a>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
@@ -1245,6 +1289,7 @@ const DownloadsSection = () => {
 const AppFooter = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -1275,12 +1320,38 @@ const AppFooter = () => {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(label);
+      
+      // Create hearts
+      const newHearts = Array.from({ length: 6 }).map((_, i) => ({
+        id: Date.now() + i,
+        x: Math.random() * 100 - 50 // random horizontal spread
+      }));
+      setHearts(prev => [...prev, ...newHearts]);
+      
       setTimeout(() => setCopied(null), 2000);
+      setTimeout(() => {
+        setHearts(prev => prev.filter(h => !newHearts.find(nh => nh.id === h.id)));
+      }, 1500);
     });
   };
 
   return (
-    <footer className="mt-12 pb-12 px-4 relative z-10">
+    <footer className="mt-12 pb-12 px-4 relative z-10 overflow-hidden">
+      {/* Flying Hearts */}
+      <AnimatePresence>
+        {hearts.map(heart => (
+          <motion.div
+            key={heart.id}
+            initial={{ opacity: 0, y: 0, x: heart.x, scale: 0.5 }}
+            animate={{ opacity: [0, 1, 1, 0], y: -150, x: heart.x + (Math.random() * 40 - 20), scale: [0.5, 1.2, 1, 0.8] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="absolute bottom-20 left-1/2 pointer-events-none z-50"
+          >
+            <Heart className="w-6 h-6 text-neon-pink fill-neon-pink" />
+          </motion.div>
+        ))}
+      </AnimatePresence>
       <div className="max-w-3xl mx-auto space-y-6">
         {/* PWA & Support Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1331,7 +1402,7 @@ const AppFooter = () => {
                 title="Скопировать номер карты Сбер"
               >
                 {copied === 'sber' ? (
-                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Скопировано</span>
+                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Номер скопирован</span>
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
@@ -1354,7 +1425,7 @@ const AppFooter = () => {
                 title="Скопировать номер карты Т-Банк"
               >
                 {copied === 'tbank' ? (
-                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Скопировано</span>
+                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Номер скопирован</span>
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
@@ -1417,7 +1488,8 @@ export default function App() {
                 awayScorers: row['Авторы_Г'],
                 photoUrl: row['Фото'],
                 broadcastUrl: row['Трансляция'],
-                weather: row['Погода']
+                weather: row['Погода'],
+                mapUrl: row['Карта_2ГИС']
               };
             });
 

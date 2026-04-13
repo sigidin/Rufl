@@ -34,6 +34,7 @@ export interface Match {
   photoUrl?: string;    // New: link to gallery
   broadcastUrl?: string; // New: link to stream
   weather?: string;      // New: weather info
+  mapUrl?: string;       // New: link to 2GIS/Google Maps
   isHome?: boolean;
 }
 
