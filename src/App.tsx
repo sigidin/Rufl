@@ -206,16 +206,30 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
                   <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
                   <span className="text-xl font-black text-white">{match.time}</span>
                 </div>
-                <button 
-                  onClick={copyAddress}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group relative"
-                >
-                  <Navigation className={`w-3.5 h-3.5 ${copied ? 'text-green-400' : 'text-bright-blue group-hover:animate-bounce'}`} />
-                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
-                    {copied ? 'Скопировано' : match.location}
-                  </span>
-                  {copied && <Check className="w-3 h-3 text-green-400" />}
-                </button>
+                {match.mapUrl ? (
+                  <a 
+                    href={match.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group relative"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-bright-blue group-hover:animate-pulse" />
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {match.location}
+                    </span>
+                  </a>
+                ) : (
+                  <button 
+                    onClick={copyAddress}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group relative"
+                  >
+                    <Navigation className={`w-3.5 h-3.5 ${copied ? 'text-green-400' : 'text-bright-blue group-hover:animate-bounce'}`} />
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {copied ? 'Скопировано' : match.location}
+                    </span>
+                    {copied && <Check className="w-3 h-3 text-green-400" />}
+                  </button>
+                )}
               </div>
               {match.weather ? (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-neon-yellow uppercase tracking-[0.2em] mt-3">
@@ -791,10 +805,8 @@ const FarEastMap = () => {
   }, []);
 
   const handleDoubleTap = () => {
-    if (isZoomed) {
-      setPosition({ x: 0, y: 0 });
-    }
     setIsZoomed(!isZoomed);
+    setPosition({ x: 0, y: 0 });
   };
 
   return (
@@ -805,21 +817,20 @@ const FarEastMap = () => {
       >
         <motion.div
           drag={isZoomed}
-          dragConstraints={{ left: -600, right: 600, top: -800, bottom: 0 }}
+          dragConstraints={{ left: -600, right: 600, top: -800, bottom: 800 }}
           dragElastic={0.1}
           animate={{ 
             scale: isZoomed ? 2.5 : 1,
-            x: isZoomed ? position.x : 0,
-            y: isZoomed ? position.y : 0
+            x: isZoomed ? undefined : 0,
+            y: isZoomed ? undefined : 0
           }}
-          style={{ originY: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="w-full h-full"
         >
           <img 
             src="https://i.ibb.co/7xJcHVQP/map.png" 
             alt="География турнира" 
-            className="w-full h-auto object-cover select-none"
+            className="w-full h-auto object-cover select-none pointer-events-none"
             referrerPolicy="no-referrer"
             draggable={false}
           />
@@ -1009,24 +1020,24 @@ const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> 
       <div className="flex flex-col items-center gap-3">
         <span className="text-lg font-black text-bright-blue italic">{match.time}</span>
         <div className="flex flex-col items-center gap-1">
-          <button 
-            onClick={copyAddress}
-            className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
-          >
-            <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
-            <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано' : match.location}</span>
-          </button>
-          
-          {match.mapUrl && (
+          {match.mapUrl ? (
             <a 
               href={match.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[7px] font-black text-neon-pink/60 uppercase tracking-widest hover:text-neon-pink transition-colors flex items-center gap-1"
+              className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
             >
-              <ExternalLink className="w-2 h-2" />
-              Открыть в 2ГИС
+              <ExternalLink className="w-2.5 h-2.5 text-bright-blue group-hover:animate-pulse" />
+              <span className="truncate max-w-[120px]">{match.location}</span>
             </a>
+          ) : (
+            <button 
+              onClick={copyAddress}
+              className="flex items-center gap-1.5 text-[8px] font-bold text-bright-blue/60 uppercase tracking-widest hover:text-white transition-colors group"
+            >
+              <Navigation className={`w-2.5 h-2.5 ${copied ? 'text-green-400' : 'group-hover:animate-pulse'}`} />
+              <span className={`truncate max-w-[120px] ${copied ? 'text-green-400' : ''}`}>{copied ? 'Скопировано' : match.location}</span>
+            </button>
           )}
         </div>
       </div>
