@@ -791,8 +791,10 @@ const FarEastMap = () => {
   }, []);
 
   const handleDoubleTap = () => {
+    if (isZoomed) {
+      setPosition({ x: 0, y: 0 });
+    }
     setIsZoomed(!isZoomed);
-    if (isZoomed) setPosition({ x: 0, y: 0 });
   };
 
   return (
@@ -803,12 +805,14 @@ const FarEastMap = () => {
       >
         <motion.div
           drag={isZoomed}
-          dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
+          dragConstraints={{ left: -600, right: 600, top: -800, bottom: 0 }}
+          dragElastic={0.1}
           animate={{ 
             scale: isZoomed ? 2.5 : 1,
-            x: position.x,
-            y: position.y
+            x: isZoomed ? position.x : 0,
+            y: isZoomed ? position.y : 0
           }}
+          style={{ originY: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="w-full h-full"
         >
