@@ -28,7 +28,8 @@ import {
   ExternalLink,
   Video,
   Users,
-  Heart
+  Heart,
+  Music
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Papa from 'papaparse';
@@ -817,13 +818,14 @@ const FarEastMap = () => {
       >
         <motion.div
           drag={isZoomed}
-          dragConstraints={{ left: -600, right: 600, top: -800, bottom: 800 }}
+          dragConstraints={{ left: -600, right: 600, top: -1000, bottom: 0 }}
           dragElastic={0.1}
           animate={{ 
             scale: isZoomed ? 2.5 : 1,
             x: isZoomed ? undefined : 0,
             y: isZoomed ? undefined : 0
           }}
+          style={{ originY: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="w-full h-full"
         >
@@ -1237,11 +1239,24 @@ const WeatherWidget = ({ city }: { city: string }) => {
 
 const DownloadsSection = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const items = [
-    { title: 'Обои для ПК #1', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000', size: '4.2 MB', downloads: '0' },
-    { title: 'Обои для Смартфона', type: 'Wallpaper', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000', size: '2.8 MB', downloads: '0' },
-    { title: 'Гимн Динамо', type: 'Audio', url: '#', size: '5.1 MB', downloads: '0' },
-    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', downloads: '0' }
+  const [activeTab, setActiveTab] = useState<'pc' | 'mobile' | 'other'>('pc');
+
+  const pcWallpapers = [
+    { title: 'Карта турнира', url: 'https://i.ibb.co/7xJcHVQP/map.png', size: '2.4 MB' },
+    { title: 'Динамо Стиль', url: 'https://i.ibb.co/FbzrPGdt/1.jpg', size: '1.8 MB' }
+  ];
+
+  const mobileWallpapers = [
+    { title: 'Киберпанк', url: 'https://i.ibb.co/fzht8FVN/Create-a-highly-202604140109.jpg', size: '1.2 MB' },
+    { title: 'Фон Динамо #1', url: 'https://i.ibb.co/Mx5JM34y/background.png', size: '0.8 MB' },
+    { title: 'Фон Динамо #2', url: 'https://i.ibb.co/Q3n5hP0r/background-2.png', size: '0.9 MB' },
+    { title: 'Фон Динамо #3', url: 'https://i.ibb.co/3m93Ynz5/background-3.png', size: '1.1 MB' },
+    { title: 'Фон Динамо #4', url: 'https://i.ibb.co/N6PCSqG0/background-4.png', size: '1.0 MB' }
+  ];
+
+  const otherMedia = [
+    { title: 'Гимн Динамо', type: 'Audio', url: 'https://r2.syntx.ai/user_328007139/generated/f5317ab14bdd51691d87bf1c3a329733_06ecb7a5-353a-4699-9e8d-263669c0bd72.mp3', size: '5.1 MB', icon: <Music className="w-5 h-5" /> },
+    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', icon: <Download className="w-5 h-5" /> }
   ];
 
   return (
@@ -1251,7 +1266,7 @@ const DownloadsSection = () => {
           className="cursor-pointer group"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <SectionTitle title="Медиа и загрузки" icon={Download} />
+          <SectionTitle title="Медиа и загрузки" icon={Download} imageSrc="https://i.ibb.co/bMYHDSBf/stats.png" />
         </div>
         
         <AnimatePresence>
@@ -1260,39 +1275,108 @@ const DownloadsSection = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-hidden"
+              className="overflow-hidden"
             >
-              {items.map((item, i) => (
-                <motion.div 
-                  key={i}
-                  whileHover={{ y: -5 }}
-                  className="glass-card p-6 rounded-3xl border border-white/10 flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-bright-blue/10 flex items-center justify-center text-bright-blue group-hover:bg-bright-blue group-hover:text-navy transition-all">
-                      {item.type === 'Wallpaper' ? <ImageIcon className="w-6 h-6" /> : item.type === 'Audio' ? <Video className="w-6 h-6" /> : <Download className="w-6 h-6" />}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-white uppercase tracking-wider">{item.title}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">{item.type} • {item.size}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/10" />
-                        <span className="text-[9px] font-bold text-bright-blue/60 uppercase tracking-widest flex items-center gap-1">
-                          <Download className="w-2.5 h-2.5" /> {item.downloads}
-                        </span>
+              <div className="glass-card rounded-[32px] border border-white/10 p-6 md:p-8">
+                {/* Tabs */}
+                <div className="flex gap-2 mb-8 p-1 bg-navy/40 rounded-2xl border border-white/5 w-fit mx-auto">
+                  {(['pc', 'mobile', 'other'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                        activeTab === tab 
+                          ? 'bg-bright-blue text-navy shadow-[0_0_15px_rgba(0,240,255,0.4)]' 
+                          : 'text-white/40 hover:text-white/60'
+                      }`}
+                    >
+                      {tab === 'pc' ? 'ПК' : tab === 'mobile' ? 'Телефон' : 'Разное'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Content */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeTab === 'pc' && pcWallpapers.map((wp, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="group relative aspect-video rounded-2xl overflow-hidden border border-white/10"
+                    >
+                      <img src={wp.url} alt={wp.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent opacity-60" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] font-black text-white uppercase tracking-wider">{wp.title}</p>
+                          <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{wp.size}</p>
+                        </div>
+                        <a 
+                          href={wp.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-lg bg-bright-blue text-navy flex items-center justify-center shadow-lg hover:scale-110 transition-all"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
                       </div>
-                    </div>
-                  </div>
-                  <a 
-                    href={item.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-white/5 text-white/60 hover:text-bright-blue hover:bg-bright-blue/10 transition-all"
-                  >
-                    <Download className="w-5 h-5" />
-                  </a>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  ))}
+
+                  {activeTab === 'mobile' && mobileWallpapers.map((wp, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="group relative aspect-[9/16] rounded-2xl overflow-hidden border border-white/10"
+                    >
+                      <img src={wp.url} alt={wp.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent opacity-60" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] font-black text-white uppercase tracking-wider">{wp.title}</p>
+                          <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{wp.size}</p>
+                        </div>
+                        <a 
+                          href={wp.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-lg bg-bright-blue text-navy flex items-center justify-center shadow-lg hover:scale-110 transition-all"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {activeTab === 'other' && otherMedia.map((item, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass-card p-6 rounded-2xl border border-white/10 flex items-center justify-between group h-full"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-bright-blue/10 flex items-center justify-center text-bright-blue group-hover:bg-bright-blue group-hover:text-navy transition-all">
+                          {item.icon}
+                        </div>
+                        <div>
+                          <h4 className="text-[10px] font-black text-white uppercase tracking-wider">{item.title}</h4>
+                          <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">{item.size}</p>
+                        </div>
+                      </div>
+                      <a 
+                        href={item.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-bright-blue hover:bg-bright-blue/10 transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
