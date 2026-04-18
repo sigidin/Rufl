@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Trophy, 
   Calendar, 
   ChevronRight, 
+  ChevronLeft,
   MapPin, 
   Clock, 
   Info, 
@@ -37,6 +38,8 @@ import * as d3 from 'd3';
 import confetti from 'canvas-confetti';
 import { MOCK_DATA } from './mockData';
 import { TournamentData, Match, TableRow, Player } from './types';
+
+import AirHockeyGame from './components/AirHockeyGame';
 
 const MATCHES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZwYgX3nA_CTjCHnf7VbNv4T4kHRG1nSMJ-TSgEhxrPKduWOP9XRovOK2t44g0lD28uxspnxyY/pub?gid=80457916&single=true&output=csv';
 const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7TDrZwYgX3nA_CTjCHnf7VbNv4T4kHRG1nSMJ-TSgEhxrPKduWOP9XRovOK2t44g0lD28uxspnxyY/pub?gid=164242498&single=true&output=csv'; 
@@ -366,9 +369,28 @@ const NextMatchCard = ({ match, table, logos }: { match: Match | null, table: Ta
   );
 };
 
-const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['dinamoStats'], players: Player[], logos: Record<string, string> }) => {
+const DinamoSpecialCard = ({ stats, players, logos, onTriggerHockey }: { stats: TournamentData['dinamoStats'], players: Player[], logos: Record<string, string>, onTriggerHockey: () => void }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'goals'>('goals');
+  const [clicks, setClicks] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+
+  const handleHockeyActivation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const now = Date.now();
+    if (!startTime || now - startTime > 10000) {
+      setStartTime(now);
+      setClicks(1);
+    } else {
+      const newClicks = clicks + 1;
+      setClicks(newClicks);
+      if (newClicks >= 15) {
+        onTriggerHockey();
+        setClicks(0);
+        setStartTime(null);
+      }
+    }
+  };
 
   const positionGroups = [
     { key: 'врт', label: 'Вратари' },
@@ -428,7 +450,8 @@ const DinamoSpecialCard = ({ stats, players, logos }: { stats: TournamentData['d
             <div className="flex flex-col items-center text-center relative z-10">
               <motion.div 
                 layout
-                className="w-40 h-40 flex items-center justify-center mb-4 relative"
+                className="w-40 h-40 flex items-center justify-center mb-4 relative cursor-pointer"
+                onClick={handleHockeyActivation}
               >
                 <motion.div 
                   animate={{ 
@@ -1072,6 +1095,52 @@ const UpcomingMatchCard: React.FC<{ match: Match, logos: Record<string, string> 
 
 const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: string, icon: any, logos: Record<string, string> }) => {
   const isUpcoming = title === "Предстоящие матчи";
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const progress = target.scrollLeft / (target.scrollWidth - target.clientWidth);
+    setScrollProgress(isNaN(progress) ? 0 : progress);
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -340 : 340;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleThumbMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && scrollContainerRef.current && scrollRef.current) {
+        const rect = scrollContainerRef.current.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        const boundedPos = Math.max(0, Math.min(1, pos));
+        const scrollTarget = boundedPos * (scrollRef.current.scrollWidth - scrollRef.current.clientWidth);
+        scrollRef.current.scrollLeft = scrollTarget;
+      }
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
   
   const isOurTeamLocal = (name: string) => {
     const lower = name.toLowerCase();
@@ -1104,11 +1173,56 @@ const MatchList = ({ matches, title, icon, logos }: { matches: Match[], title: s
     <div className="px-4 py-12">
       <SectionTitle title={title} icon={icon} imageSrc={sectionIcons[title]} />
       {isUpcoming ? (
-        <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-4">
-          {displayMatches.length > 0 ? (
-            displayMatches.slice(0, 5).map(match => <UpcomingMatchCard key={match.id} match={match} logos={logos} />)
-          ) : (
-            <div className="w-full p-12 text-center text-white/40 text-sm italic glass-card rounded-[32px] border border-white/20">Матчей не найдено</div>
+        <div className="relative group/scroll px-4">
+          <div 
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide"
+          >
+            {displayMatches.length > 0 ? (
+              displayMatches.slice(0, 5).map(match => <UpcomingMatchCard key={match.id} match={match} logos={logos} />)
+            ) : (
+              <div className="w-full p-12 text-center text-white/40 text-sm italic glass-card rounded-[32px] border border-white/20">Матчей не найдено</div>
+            )}
+          </div>
+          
+          {displayMatches.length > 1 && (
+            <div className="flex items-center gap-4 max-w-xl mx-auto mt-2">
+              <button 
+                onClick={() => scroll('left')}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-bright-blue hover:border-bright-blue/50 transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              <div 
+                ref={scrollContainerRef}
+                className="flex-1 h-1.5 bg-white/5 rounded-full relative overflow-hidden cursor-pointer group/bar"
+                onClick={(e) => {
+                  if (scrollContainerRef.current && scrollRef.current) {
+                    const rect = scrollContainerRef.current.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    scrollRef.current.scrollLeft = pos * (scrollRef.current.scrollWidth - scrollRef.current.clientWidth);
+                  }
+                }}
+              >
+                {/* Progress track */}
+                <motion.div 
+                  initial={false}
+                  animate={{ left: `${scrollProgress * (100 - 15)}%` }}
+                  onMouseDown={handleThumbMouseDown}
+                  className="absolute top-0 w-[15%] h-full bg-bright-blue shadow-[0_0_15px_rgba(0,240,255,0.6)] cursor-grab active:cursor-grabbing z-10 rounded-full"
+                />
+                <div className="absolute inset-0 bg-bright-blue/10 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
+              </div>
+
+              <button 
+                onClick={() => scroll('right')}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-bright-blue hover:border-bright-blue/50 transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -1559,6 +1673,7 @@ const AppFooter = () => {
 export default function App() {
   const [data, setData] = useState<TournamentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showHockeyMode, setShowHockeyMode] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1650,8 +1765,6 @@ export default function App() {
                       resolve();
                     },
                     error: (err) => {
-                      const errorMsg = err instanceof Error ? err.message : (err && typeof err === 'object' && 'type' in err ? `Network error (${(err as any).type})` : 'Unknown error');
-                      console.warn('PapaParse could not fetch logos from sheet:', errorMsg);
                       resolve();
                     }
                   });
@@ -1792,11 +1905,37 @@ export default function App() {
       <div className="app-background" />
       <Header />
       
+      <AnimatePresence>
+        {showHockeyMode && data && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100]"
+          >
+            <AirHockeyGame 
+              onClose={() => setShowHockeyMode(false)}
+              homeTeamName="ДИНАМО"
+              awayTeamName="СОПЕРНИК"
+              playerLogo="https://i.ibb.co/pvyHFwVY/dinamo.png"
+              opponents={data.table
+                .filter(team => !team.name.toLowerCase().includes('динамо'))
+                .map(team => ({ 
+                  name: team.name, 
+                  logo: data.logos[team.name] || 'https://i.ibb.co/vz6mD7y0/logo-placeholder.png' 
+                }))
+              }
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="relative z-10 space-y-0">
         <DinamoSpecialCard 
           stats={data.dinamoStats} 
           players={data.dinamoPlayers} 
           logos={data.logos}
+          onTriggerHockey={() => setShowHockeyMode(true)}
         />
 
         <NextMatchCard 
