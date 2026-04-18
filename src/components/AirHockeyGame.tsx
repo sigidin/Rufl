@@ -496,6 +496,14 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
               <span className="text-lg md:text-4xl font-black italic leading-none">{scores.ai}</span>
             </div>
             <img src={opponent.logo} alt="" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
+            
+            <button 
+              onClick={onClose}
+              className="ml-2 md:ml-4 p-1 md:p-2 text-white/20 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              title="Выйти из игры"
+            >
+              <X className="w-4 h-4 md:w-6 md:h-6" />
+            </button>
           </div>
         </div>
 
@@ -566,12 +574,6 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
           </AnimatePresence>
         </div>
 
-        <button 
-          onClick={onClose}
-          className="absolute top-6 right-6 p-3 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-all"
-        >
-          <X className="w-10 h-10" />
-        </button>
       </div>
     </div>
   );

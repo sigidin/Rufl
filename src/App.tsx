@@ -1920,10 +1920,35 @@ export default function App() {
               playerLogo="https://i.ibb.co/pvyHFwVY/dinamo.png"
               opponents={data.table
                 .filter(team => team.teamName && !team.teamName.toLowerCase().includes('динамо'))
-                .map(team => ({ 
-                  name: team.teamName, 
-                  logo: data.logos[team.teamName] || 'https://i.ibb.co/vz6mD7y0/logo-placeholder.png' 
-                }))
+                .map(team => {
+                  const name = team.teamName;
+                  const logoUrl = data.logos[name];
+                  
+                  // Replicate robust logo mapping from TeamLogo
+                  const localLogos: Record<string, string> = {
+                    'академия': 'https://i.ibb.co/wNNvSf3f/academy.png',
+                    'динамо': 'https://i.ibb.co/pvyHFwVY/dinamo.png',
+                    'искра': 'https://i.ibb.co/xt8CK8Zk/iskra.png',
+                    'сшор': 'https://i.ibb.co/zTBmwf60/sshor1.png',
+                    'рекорд': 'https://i.ibb.co/0yf27V5r/rekord.png',
+                    'благовещенск': 'https://i.ibb.co/fYzrJgBq/blagoveshchensk.png',
+                    'ска': 'https://i.ibb.co/WWdR0gQX/ska.png',
+                    'сахалин': 'https://i.ibb.co/4wY4SP2z/sakhalin.png'
+                  };
+
+                  const getLocalLogo = () => {
+                    const lowerName = name.toLowerCase();
+                    for (const [key, path] of Object.entries(localLogos)) {
+                      if (lowerName.includes(key)) return path;
+                    }
+                    return null;
+                  };
+
+                  return { 
+                    name, 
+                    logo: logoUrl || getLocalLogo() || 'https://i.ibb.co/vz6mD7y0/logo-placeholder.png' 
+                  };
+                })
               }
             />
           </motion.div>
