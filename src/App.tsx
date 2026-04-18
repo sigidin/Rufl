@@ -1919,10 +1919,10 @@ export default function App() {
               awayTeamName="СОПЕРНИК"
               playerLogo="https://i.ibb.co/pvyHFwVY/dinamo.png"
               opponents={data.table
-                .filter(team => !team.name.toLowerCase().includes('динамо'))
+                .filter(team => team.teamName && !team.teamName.toLowerCase().includes('динамо'))
                 .map(team => ({ 
-                  name: team.name, 
-                  logo: data.logos[team.name] || 'https://i.ibb.co/vz6mD7y0/logo-placeholder.png' 
+                  name: team.teamName, 
+                  logo: data.logos[team.teamName] || 'https://i.ibb.co/vz6mD7y0/logo-placeholder.png' 
                 }))
               }
             />

@@ -472,30 +472,30 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
     <div className="fixed inset-0 z-[100] bg-navy/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-bright-blue/10 to-transparent pointer-events-none" />
       
-      <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center px-4 py-8">
+      <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center px-4 py-2 md:py-8">
         {/* HUD */}
-        <div className="w-full max-w-4xl flex items-center justify-between mb-4 md:mb-6 text-white z-10 bg-navy/40 p-2 md:p-4 rounded-2xl md:rounded-3xl border border-white/5 backdrop-blur-md">
-          <div className="flex items-center gap-2 md:gap-4 flex-1">
-            <img src={playerLogo} alt="" className="w-8 h-8 md:w-12 md:h-12 object-contain" />
+        <div className="w-full max-w-4xl flex items-center justify-between mb-2 md:mb-6 text-white z-10 bg-navy/40 p-1 md:p-4 rounded-xl md:rounded-3xl border border-white/5 backdrop-blur-md">
+          <div className="flex items-center gap-1 md:gap-4 flex-1">
+            <img src={playerLogo} alt="" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
             <div className="flex flex-col">
-              <span className="text-[7px] md:text-[10px] font-black uppercase text-bright-blue tracking-tighter md:tracking-widest truncate max-w-[60px] md:max-w-none">{homeTeamName}</span>
-              <span className="text-xl md:text-4xl font-black italic leading-none">{scores.player}</span>
+              <span className="text-[6px] md:text-[10px] font-black uppercase text-bright-blue tracking-tighter md:tracking-widest truncate max-w-[50px] md:max-w-none">{homeTeamName}</span>
+              <span className="text-lg md:text-4xl font-black italic leading-none">{scores.player}</span>
             </div>
           </div>
           
-          <div className="flex flex-col items-center mx-2 h-full justify-center">
-             <div className="px-3 md:px-6 py-1 md:py-2 bg-bright-blue/10 rounded-full border border-bright-blue/20 mb-0 md:mb-1">
-                <span className="text-sm md:text-2xl font-mono text-white tracking-widest leading-none">{formatTime(timeLeft)}</span>
+          <div className="flex flex-col items-center mx-1 h-full justify-center">
+             <div className="px-2 md:px-6 py-0.5 md:py-2 bg-bright-blue/10 rounded-full border border-bright-blue/20 mb-0 md:mb-1">
+                <span className="text-xs md:text-2xl font-mono text-white tracking-widest leading-none">{formatTime(timeLeft)}</span>
              </div>
-             <span className="text-[6px] md:text-[8px] font-black uppercase text-white/30 tracking-widest">ОСТАЛОСЬ</span>
+             <span className="text-[5px] md:text-[8px] font-black uppercase text-white/30 tracking-widest">ОСТАЛОСЬ</span>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4 text-right flex-1 justify-end">
+          <div className="flex items-center gap-1 md:gap-4 text-right flex-1 justify-end">
             <div className="flex flex-col">
-              <span className="text-[7px] md:text-[10px] font-black uppercase text-white/40 tracking-tighter md:tracking-widest truncate max-w-[60px] md:max-w-none">{opponent.name}</span>
-              <span className="text-xl md:text-4xl font-black italic leading-none">{scores.ai}</span>
+              <span className="text-[6px] md:text-[10px] font-black uppercase text-white/40 tracking-tighter md:tracking-widest truncate max-w-[50px] md:max-w-none">{opponent.name}</span>
+              <span className="text-lg md:text-4xl font-black italic leading-none">{scores.ai}</span>
             </div>
-            <img src={opponent.logo} alt="" className="w-8 h-8 md:w-12 md:h-12 object-contain" />
+            <img src={opponent.logo} alt="" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
           </div>
         </div>
 
