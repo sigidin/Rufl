@@ -1370,7 +1370,7 @@ const DownloadsSection = () => {
 
   const otherMedia = [
     { title: 'Гимн Динамо', type: 'Audio', url: 'https://r2.syntx.ai/user_328007139/generated/f5317ab14bdd51691d87bf1c3a329733_06ecb7a5-353a-4699-9e8d-263669c0bd72.mp3', size: '5.1 MB', icon: <Music className="w-5 h-5" /> },
-    { title: 'Стикерпак Telegram', type: 'Stickers', url: 'https://t.me/addstickers/dinamo_vladivostok', size: 'Link', icon: <Download className="w-5 h-5" /> }
+    { title: 'Стикерпак Telegram (2012)', type: 'Stickers', url: 'https://t.me/addstickers/DINAMO_2012', size: 'Link', icon: <Download className="w-5 h-5" /> }
   ];
 
   return (

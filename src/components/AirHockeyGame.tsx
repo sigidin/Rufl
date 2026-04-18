@@ -180,7 +180,7 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
       if (isPlayer) next.player += 1;
       else next.ai += 1;
 
-      if (next.player >= 5 || next.ai >= 5) {
+      if (next.player >= 3 || next.ai >= 3) {
         setTimeout(endGame, 1000);
       } else {
         setTimeout(() => {
@@ -416,7 +416,29 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
           ctx.beginPath();
           ctx.arc(x, y, PADDLE_RADIUS - 5, 0, Math.PI * 2);
           ctx.clip();
-          ctx.drawImage(img, x - (PADDLE_RADIUS - 5), y - (PADDLE_RADIUS - 5), (PADDLE_RADIUS - 5) * 2, (PADDLE_RADIUS - 5) * 2);
+          
+          // Center crop logic to maintain aspect ratio and prevent stretching
+          const r = PADDLE_RADIUS - 5;
+          const imgAspect = img.width / img.height;
+          let drawW, drawH, drawX, drawY;
+          
+          if (imgAspect > 1) {
+            // Wider than tall
+            drawH = r * 2;
+            drawW = drawH * imgAspect;
+            drawX = x - drawW / 2;
+            drawY = y - r;
+          } else {
+            // Taller than wide
+            drawW = r * 2;
+            drawH = drawW / imgAspect;
+            drawX = x - r;
+            drawY = y - drawH / 2;
+          }
+          
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, drawX, drawY, drawW, drawH);
         }
         ctx.restore();
       };
@@ -472,37 +494,40 @@ const AirHockeyGame: React.FC<Props> = ({ onClose, homeTeamName = "ДИНАМО"
     <div className="fixed inset-0 z-[100] bg-navy/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-bright-blue/10 to-transparent pointer-events-none" />
       
-      <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center px-4 py-2 md:py-8">
+      <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-start px-2 py-4 md:py-8">
         {/* HUD */}
-        <div className="w-full max-w-4xl flex items-center justify-between mb-2 md:mb-6 text-white z-10 bg-navy/40 p-1 md:p-4 rounded-xl md:rounded-3xl border border-white/5 backdrop-blur-md">
-          <div className="flex items-center gap-1 md:gap-4 flex-1">
+        <div className="w-full max-w-4xl flex items-center justify-between mb-4 md:mb-8 text-white z-10 bg-navy/60 p-2 md:p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+          {/* Left Team: Logo Name Score */}
+          <div className="flex items-center gap-1.5 md:gap-4 flex-1">
             <img src={playerLogo} alt="" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
-            <div className="flex flex-col">
-              <span className="text-[6px] md:text-[10px] font-black uppercase text-bright-blue tracking-tighter md:tracking-widest truncate max-w-[50px] md:max-w-none">{homeTeamName}</span>
-              <span className="text-lg md:text-4xl font-black italic leading-none">{scores.player}</span>
+            <div className="flex items-baseline gap-1 md:gap-3">
+              <span className="text-[8px] md:text-sm font-black uppercase text-bright-blue tracking-tighter truncate max-w-[50px] md:max-w-[120px]">{homeTeamName}</span>
+              <span className="text-xl md:text-5xl font-black italic italic-scores">{scores.player}</span>
             </div>
           </div>
           
-          <div className="flex flex-col items-center mx-1 h-full justify-center">
-             <div className="px-2 md:px-6 py-0.5 md:py-2 bg-bright-blue/10 rounded-full border border-bright-blue/20 mb-0 md:mb-1">
-                <span className="text-xs md:text-2xl font-mono text-white tracking-widest leading-none">{formatTime(timeLeft)}</span>
+          {/* Center: Time */}
+          <div className="flex flex-col items-center mx-2 md:mx-6">
+             <div className="px-3 md:px-6 py-1 md:py-2 bg-bright-blue/10 rounded-full border border-bright-blue/20">
+                <span className="text-xs md:text-3xl font-mono text-white tracking-widest leading-none">{formatTime(timeLeft)}</span>
              </div>
-             <span className="text-[5px] md:text-[8px] font-black uppercase text-white/30 tracking-widest">ОСТАЛОСЬ</span>
+             <span className="hidden md:block text-[8px] font-black uppercase text-white/30 tracking-widest mt-1">ОСТАЛОСЬ</span>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-4 text-right flex-1 justify-end">
-            <div className="flex flex-col">
-              <span className="text-[6px] md:text-[10px] font-black uppercase text-white/40 tracking-tighter md:tracking-widest truncate max-w-[50px] md:max-w-none">{opponent.name}</span>
-              <span className="text-lg md:text-4xl font-black italic leading-none">{scores.ai}</span>
+          {/* Right Team: Score Name Logo */}
+          <div className="flex items-center gap-1.5 md:gap-4 text-right flex-1 justify-end">
+            <div className="flex items-baseline gap-1 md:gap-3 justify-end">
+              <span className="text-xl md:text-5xl font-black italic italic-scores">{scores.ai}</span>
+              <span className="text-[8px] md:text-sm font-black uppercase text-white/40 tracking-tighter truncate max-w-[50px] md:max-w-[120px]">{opponent.name}</span>
             </div>
             <img src={opponent.logo} alt="" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
             
             <button 
               onClick={onClose}
-              className="ml-2 md:ml-4 p-1 md:p-2 text-white/20 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              className="ml-2 md:ml-6 p-1.5 md:p-2 text-white/20 hover:text-white hover:bg-white/5 rounded-lg transition-all"
               title="Выйти из игры"
             >
-              <X className="w-4 h-4 md:w-6 md:h-6" />
+              <X className="w-4 h-4 md:w-8 md:h-8" />
             </button>
           </div>
         </div>
