@@ -1566,12 +1566,12 @@ const AppFooter = () => {
         ))}
       </AnimatePresence>
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* PWA & Support Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* PWA Section */}
+        <div className="flex justify-center">
           {/* Install Card */}
           <motion.div 
             whileHover={{ y: -5 }}
-            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
+            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center w-full max-w-md"
           >
             <img src="https://i.ibb.co/Cy41rJD/app.png" alt="App" className="w-16 h-16 object-contain mb-4 drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]" />
             <div className="flex flex-col items-center">
@@ -1589,66 +1589,6 @@ const AppFooter = () => {
               <Download className="w-3.5 h-3.5" />
               Установить
             </motion.button>
-          </motion.div>
-
-          {/* Support Card */}
-          <motion.div 
-            whileHover={{ y: -5 }}
-            className="glass-card rounded-[32px] p-6 border border-white/40 flex flex-col items-center text-center"
-          >
-            <img src="https://i.ibb.co/NkHkTxr/support.png" alt="Support" className="w-16 h-16 object-contain mb-4 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
-            <h3 className="text-sm text-strong text-white mb-1">Поддержать проект</h3>
-            <p className="text-[10px] font-medium text-white/60 mb-4 leading-relaxed">
-              Ваша благодарность и поддержка помогают развивать приложение и обновлять статистические данные
-            </p>
-            <div className="flex items-center gap-4 w-full">
-              <motion.button 
-                onClick={() => copyToClipboard('4276500050261351', 'sber')}
-                whileHover={{ 
-                  scale: 1.02, 
-                  boxShadow: copied === 'sber' ? "0 0 20px rgba(74, 222, 128, 0.4)" : "0 0 20px rgba(0, 240, 255, 0.4)" 
-                }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-1 h-12 rounded-2xl border flex items-center justify-center relative group overflow-hidden transition-all ${
-                  copied === 'sber' ? 'bg-green-500/10 border-green-500/50' : 'bg-bright-blue/10 border-bright-blue/30'
-                }`}
-                title="Скопировать номер карты Сбер"
-              >
-                {copied === 'sber' ? (
-                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Номер скопирован</span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
-                      <div className="w-3 h-3 bg-white rounded-full opacity-80" />
-                    </div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">Сбер</span>
-                  </div>
-                )}
-              </motion.button>
-              <motion.button 
-                onClick={() => copyToClipboard('2200700717929292', 'tbank')}
-                whileHover={{ 
-                  scale: 1.02, 
-                  boxShadow: copied === 'tbank' ? "0 0 20px rgba(74, 222, 128, 0.4)" : "0 0 20px rgba(0, 240, 255, 0.4)" 
-                }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-1 h-12 rounded-2xl border flex items-center justify-center relative group overflow-hidden transition-all ${
-                  copied === 'tbank' ? 'bg-green-500/10 border-green-500/50' : 'bg-bright-blue/10 border-bright-blue/30'
-                }`}
-                title="Скопировать номер карты Т-Банк"
-              >
-                {copied === 'tbank' ? (
-                  <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter animate-in zoom-in">Номер скопирован</span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
-                      <div className="w-3 h-3 bg-navy rounded-full opacity-80" />
-                    </div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">Т-Банк</span>
-                  </div>
-                )}
-              </motion.button>
-            </div>
           </motion.div>
         </div>
 
